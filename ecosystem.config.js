@@ -11,7 +11,7 @@ module.exports = {
 
       script  : "./index.js",
       watch   : true,
-      name    : "SubsAgent"
+      name    : "App Space"
     }
   ]
 }
