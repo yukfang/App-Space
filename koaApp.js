@@ -1,6 +1,7 @@
 const Koa           = require('koa');
 const bodyParser    = require('koa-bodyparser');
 const ssvmlistRouter = require('./routes/vpn/ssvmlist');
+const sshTunnelRouter = require('./routes/ssh/tunnel')
 const ipRouter       = require('./routes/ip/myip');
 const ecommRouter    = require('./routes/ecomm/pacsun');
 const callbackRouter = require('./routes/callback/handle');
@@ -39,6 +40,7 @@ koaApp.use(async (ctx, next) => {
 koaApp.use(ssvmlistRouter.routes()).use(ssvmlistRouter.allowedMethods())
 koaApp.use(ecommRouter.routes()).use(ecommRouter.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
+koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
 koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
     methodNotAllowed: () => {
         const err = new Error('Only GET requests are allowed for this endpoint.');
