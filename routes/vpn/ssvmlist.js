@@ -4,9 +4,9 @@ const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 router.get('/:key', async (ctx) => {
 
-    console.log(`ssvmlist exec , key = ${key}`)
     await delayms(1000);
     const key = ctx.params.key.toUpperCase();
+    console.log(`ssvmlist exec , key = ${key}`)
     const value = process.env[key];
 
     if (key.toUpperCase() === 'MYIP') {
