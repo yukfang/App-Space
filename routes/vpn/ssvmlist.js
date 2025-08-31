@@ -3,11 +3,10 @@ const router = new Router({ prefix: '/ssvmlist' });
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 router.get('/:key', async (ctx) => {
-
-    await delayms(1000);
+    // await delayms(1000);
     const key = ctx.params.key.toUpperCase();
-    console.log(`ssvmlist exec , key = ${key}`)
     const value = process.env[key];
+    console.log(`ssvmlist exec , key = ${key}`)
 
     if (key.toUpperCase() === 'MYIP') {
         const myip = (process.env.PLATFORM === 'AZ_WEB_APP') ? ctx.request.headers['x-client-ip'] : ctx.request.ip;
