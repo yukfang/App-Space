@@ -3,7 +3,8 @@ const bodyParser    = require('koa-bodyparser');
 const ssvmlistRouter = require('./routes/vpn/ssvmlist');
 const sshTunnelRouter = require('./routes/ssh/tunnel')
 const ipRouter       = require('./routes/ip/myip');
-const ecommRouter    = require('./routes/ecomm/pacsun');
+const routerEcommPacsun    = require('./routes/ecomm/pacsun');
+const routerEcommHM    = require('./routes/ecomm/hm');
 const callbackRouter = require('./routes/callback/handle');
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config(); 
@@ -38,7 +39,8 @@ koaApp.use(async (ctx, next) => {
 
 // routes
 koaApp.use(ssvmlistRouter.routes()).use(ssvmlistRouter.allowedMethods())
-koaApp.use(ecommRouter.routes()).use(ecommRouter.allowedMethods())
+koaApp.use(routerEcommPacsun.routes()).use(routerEcommPacsun.allowedMethods())
+koaApp.use(routerEcommHM.routes()).use(routerEcommHM.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
 koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
 koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
