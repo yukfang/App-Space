@@ -35,6 +35,7 @@ async function handleTokenRequest(ctx) {
             LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
             data = {
                 access_token: newToken.access_token,
+                access_token_expire_in: newToken.access_token_expire_in,
                 app_secret: process.env.HM_APP_SECRET,
                 app_key: process.env.HM_APP_KEY,
             }
@@ -50,6 +51,7 @@ async function handleTokenRequest(ctx) {
                     access_token: newToken.access_token,
                     app_secret: process.env.HM_APP_SECRET,
                     app_key: process.env.HM_APP_KEY,
+                    access_token_expire_in: newToken.access_token_expire_in
                 }
             } else {
                 data = {
