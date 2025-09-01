@@ -178,9 +178,9 @@ async function refreshToken() {
     const url = `${baseUrl}${path}`
     const headers = {'Content-Type': 'application/json'}
     const params = {
-        app_key: process.env.PACSUN_APP_KEY,
-        app_secret: process.env.PACSUN_APP_SECRET,
-        refresh_token: process.env.PACSUN_REFRESH_TOKEN,
+        app_key: process.env.HM_APP_KEY,
+        app_secret: process.env.HM_APP_SECRET,
+        refresh_token: process.env.HM_REFRESH_TOKEN,
         grant_type: 'refresh_token'
     }
 

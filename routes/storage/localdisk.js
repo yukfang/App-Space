@@ -15,10 +15,10 @@ class LocalDisk {
     static readFileSync(namespace, file_name) {
         const filePath = `${STORAGE_PATH}${namespace}/`;
         const fileName = `${STORAGE_PATH}${namespace}/${file_name}`;
-        if (!fs.existsSync(filePath)) {
+        if (!fs.existsSync(fileName)) {
             return null;
         }
-        return fs.readFileSync(fileName);
+        return fs.readFileSync(fileName, 'utf8');
     }
 }
 
