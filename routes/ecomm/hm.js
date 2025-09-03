@@ -42,7 +42,7 @@ async function handleTokenRequest(ctx) {
             app_secret: shopInfo.app_secret,
             app_key: shopInfo.app_key,
             shop_cipher: shopInfo.shop_cipher,
-                        access_token_expire_in: newToken.access_token_expire_in,
+            access_token_expire_in: newToken.access_token_expire_in,
 
         }
     } else {
