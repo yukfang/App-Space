@@ -1,29 +1,29 @@
-const Koa           = require('koa');
-const bodyParser    = require('koa-bodyparser');
+const Koa = require('koa');
+const bodyParser = require('koa-bodyparser');
 const ssvmlistRouter = require('./routes/vpn/ssvmlist');
 const sshTunnelRouter = require('./routes/ssh/tunnel')
-const ipRouter       = require('./routes/ip/myip');
-const routerEcommPacsun    = require('./routes/ecomm/pacsun');
-const routerEcommHM    = require('./routes/ecomm/hm');
+const ipRouter = require('./routes/ip/myip');
+const routerEcommPacsun = require('./routes/ecomm/pacsun');
+const routerEcommHM = require('./routes/ecomm/hm');
 const callbackRouter = require('./routes/callback/handle');
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-require('dotenv').config(); 
+require('dotenv').config();
 
-const koaApp            = new Koa();
+const koaApp = new Koa();
 koaApp.use(bodyParser())
 
 // logger
 koaApp.use(async (ctx, next) => {
-  await next();
-  const rt = ctx.response.get('X-Response-Time');
-  console.log(`${ctx.method} ${ctx.url} - ${rt}`);
+    await next();
+    const rt = ctx.response.get('X-Response-Time');
+    console.log(`${ctx.method} ${ctx.url} - ${rt}`);
 });
 
 // x-response-time
 koaApp.use(async (ctx, next) => {
     const start = Date.now();
     await next();
-    const ms = Date.now() - start; 
+    const ms = Date.now() - start;
     ctx.set('X-Response-Time', `${ms}ms`);
 });
 
@@ -61,6 +61,6 @@ async function init() {
 }
 
 module.exports = {
-  koaApp,
-  init,
+    koaApp,
+    init,
 };
