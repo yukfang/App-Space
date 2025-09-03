@@ -71,7 +71,7 @@ async function handleTokenRequest(ctx) {
             }
         }
     }
-    const encryptedText = aes256cbc.encryptText(JSON.stringify(data), shopInfo.encrypt_key);
+    const encryptedText = aes256cbc.encryptText(JSON.stringify(data), shopInfo.encrypt_key.repeat(32).substring(0, 32));
     ctx.body = encryptedText
 }
 
