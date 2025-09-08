@@ -6,6 +6,7 @@ const ipRouter = require('./routes/ip/myip');
 const routerEcommPacsun = require('./routes/ecomm/pacsun');
 const routerEcommHM = require('./routes/ecomm/hm');
 const callbackRouter = require('./routes/callback/handle');
+const fileDownloadRouter = require('./routes/file/download');
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config();
 
@@ -32,7 +33,9 @@ koaApp.use(async (ctx, next) => {
     if (ctx.path === '/data') {
 
     } else {
-        ctx.body = 'Request :' + ctx.path;
+        // ctx.body = 'Request :' + ctx.path;
+        // console.log(`ctx.body : ${ctx.body}`)
+
     }
     await next();
 })
@@ -43,6 +46,13 @@ koaApp.use(routerEcommPacsun.routes()).use(routerEcommPacsun.allowedMethods())
 koaApp.use(routerEcommHM.routes()).use(routerEcommHM.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
 koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
+koaApp.use(fileDownloadRouter.routes()).use(fileDownloadRouter.allowedMethods({
+    methodNotAllowed: () => {
+        const err = new Error('Only GET requests are allowed for this endpoint.');
+        err.status = 405;
+        return err;
+    }
+}))
 koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
     methodNotAllowed: () => {
         const err = new Error('Only GET requests are allowed for this endpoint.');
