@@ -5,6 +5,7 @@ const sshTunnelRouter = require('./routes/ssh/tunnel')
 const ipRouter = require('./routes/ip/myip');
 const routerEcommPacsun = require('./routes/ecomm/pacsun');
 const routerEcommHM = require('./routes/ecomm/hm');
+const routerEcommDisney = require('./routes/ecomm/disney');
 const callbackRouter = require('./routes/callback/handle');
 const fileDownloadRouter = require('./routes/file/download');
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,6 +45,7 @@ koaApp.use(async (ctx, next) => {
 koaApp.use(ssvmlistRouter.routes()).use(ssvmlistRouter.allowedMethods())
 koaApp.use(routerEcommPacsun.routes()).use(routerEcommPacsun.allowedMethods())
 koaApp.use(routerEcommHM.routes()).use(routerEcommHM.allowedMethods())
+koaApp.use(routerEcommDisney.routes()).use(routerEcommDisney.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
 koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
 koaApp.use(fileDownloadRouter.routes()).use(fileDownloadRouter.allowedMethods({
