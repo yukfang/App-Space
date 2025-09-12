@@ -29,48 +29,57 @@ router.get('/:key', async (ctx) => {
 
 async function handleTokenRequest(ctx) {
     let data = {}
-    let cache = LocalDisk.readFileSync(`/ecomm/${SHOP}`, 'tokens.json');
+    // let cache = LocalDisk.readFileSync(`/ecomm/${SHOP}`, 'tokens.json');
+
+    //** Direct Reading from ENV */
+    data = {
+        access_token: shopInfo.access_token,
+        app_secret: shopInfo.app_secret,
+        app_key: shopInfo.app_key,
+        shop_cipher: shopInfo.shop_cipher,
+        access_token_expire_in: 4875244128
+    }
 
     /** If there is no cache, build cache first */
-    if (!cache) {
-        let newToken = await refreshToken()
-        newToken.refresh_token = "*****"
-        console.log('newToken', newToken)
-        LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
-        data = {
-            access_token: newToken.access_token,
-            app_secret: shopInfo.app_secret,
-            app_key: shopInfo.app_key,
-            shop_cipher: shopInfo.shop_cipher,
-            access_token_expire_in: newToken.access_token_expire_in,
+    // if (!cache) {
+    //     let newToken = await refreshToken()
+    //     newToken.refresh_token = "*****"
+    //     console.log('newToken', newToken)
+    //     LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
+    //     data = {
+    //         access_token: newToken.access_token,
+    //         app_secret: shopInfo.app_secret,
+    //         app_key: shopInfo.app_key,
+    //         shop_cipher: shopInfo.shop_cipher,
+    //         access_token_expire_in: newToken.access_token_expire_in,
 
-        }
-    } else {
-        let cacheData = JSON.parse(cache.toString());
-        console.log(DateTime.now().toSeconds() - cacheData.access_token_expire_in)
-        if (!cacheData.access_token_expire_in || DateTime.now().toSeconds() + 3600 * 5 > cacheData.access_token_expire_in) {
-            console.log('cache expired')
-            let newToken = await refreshToken()
-            newToken.refresh_token = "*****"
-            LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
-            data = {
-                access_token: newToken.access_token,
-                app_secret: shopInfo.app_secret,
-                app_key: shopInfo.app_key,
-                shop_cipher: shopInfo.shop_cipher,
+    //     }
+    // } else {
+    //     let cacheData = JSON.parse(cache.toString());
+    //     console.log(DateTime.now().toSeconds() - cacheData.access_token_expire_in)
+    //     if (!cacheData.access_token_expire_in || DateTime.now().toSeconds() + 3600 * 5 > cacheData.access_token_expire_in) {
+    //         console.log('cache expired')
+    //         let newToken = await refreshToken()
+    //         newToken.refresh_token = "*****"
+    //         LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
+    //         data = {
+    //             access_token: newToken.access_token,
+    //             app_secret: shopInfo.app_secret,
+    //             app_key: shopInfo.app_key,
+    //             shop_cipher: shopInfo.shop_cipher,
 
-                access_token_expire_in: newToken.access_token_expire_in
-            }
-        } else {
-            data = {
-                access_token: cacheData.access_token,
-                app_secret: shopInfo.app_secret,
-                app_key: shopInfo.app_key,
-                shop_cipher: shopInfo.shop_cipher,
-                access_token_expire_in: cacheData.access_token_expire_in,
-            }
-        }
-    }
+    //             access_token_expire_in: newToken.access_token_expire_in
+    //         }
+    //     } else {
+    //         data = {
+    //             access_token: cacheData.access_token,
+    //             app_secret: shopInfo.app_secret,
+    //             app_key: shopInfo.app_key,
+    //             shop_cipher: shopInfo.shop_cipher,
+    //             access_token_expire_in: cacheData.access_token_expire_in,
+    //         }
+    //     }
+    // }
 
     const encryptedText = aes256cbc.encryptText(JSON.stringify(data), shopInfo.encrypt_key.repeat(32).substring(0, 32));
     ctx.body = encryptedText
