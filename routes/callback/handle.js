@@ -34,13 +34,13 @@ router.get('/:path*', async (ctx) => {
             console.log(rawResp)
             authResult = rawResp
         } else if (pathSegments[0] === 'tt4d') {
- 
+            authResult = `${pathSegments[0]}: Not Implemented`
         } else if (pathSegments[0] === 'tt4d') {
-
+            authResult = `${pathSegments[0]}: Not Implemented`
         } else if (pathSegments[0] === 'shopee') {
-
+            authResult = `${pathSegments[0]}: Not Implemented`
         } else {
-
+            authResult = `${pathSegments[0]}: Not Implemented`
         }
 
         const respData = {
