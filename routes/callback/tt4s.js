@@ -9,9 +9,9 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
     // return {
     //     auth_code: 1
     // }
-    app_key = '6h92uttbf7u18'
-    grant_type = 'authorized_code'
-    auth_code = 'ROW_nvzfzgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrrsaRVqCw1Lp1koAHQvVOU5fxqKv_0S8ADRSsFfBjCX5'
+    // app_key = '6h92uttbf7u18'
+    // grant_type = 'authorized_code'
+    // auth_code = 'ROW_Ow4fGgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrlwQ4EYzMwz73SltfOp-Ge37p_0OHBcBRfQ6yGrzs6Gq'
     const app_secret = getAppSecret(app_key)
  
     const config = {
@@ -51,4 +51,4 @@ async function test() {
     console.log(data)
 }
 
-test()
+// test()
