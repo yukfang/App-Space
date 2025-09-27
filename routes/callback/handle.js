@@ -19,7 +19,7 @@ router.get('/:path*', async (ctx) => {
         
         // 读取具体的查询参数
         const app_key = queryParams.app_key || '';
-        const grant_type = 'authorization_code'; // 通常固定为authorization_code
+        const grant_type = 'authorized_code'; 
         const auth_code = queryParams.code || '';
 
         const locale = queryParams.locale || '';
