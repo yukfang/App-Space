@@ -16,7 +16,23 @@ router.get('/:key', async (ctx) => {
         ctx.redirect('/ssvmlist/SUBS_TW_LIVE');
     } else if(key.toUpperCase() === 'MY_LIVE') {
         ctx.redirect('/ssvmlist/SUBS_MY_LIVE');
-    } else if (value) {
+    } else if(key.toUpperCase() === 'LUO') {
+        ctx.redirect('/ssvmlist/SUBS_LUO');
+    } else if(key.toUpperCase() === 'LIYAN') {
+        ctx.redirect('/ssvmlist/SUBS_LIYAN');
+    } else if(key.toUpperCase() === 'MY_XIN') {
+        ctx.redirect('/ssvmlist/SUBS_XIN');
+    } else if(key.toUpperCase() === 'MY_ZHAO') {
+        ctx.redirect('/ssvmlist/SUBS_ZHAO');
+    } else if(key.toUpperCase() === 'MY_WANGYI') {
+        ctx.redirect('/ssvmlist/SUBS_WANGYI');
+    } else if(key.toUpperCase() === 'MY_LIVE_CZ') {
+        ctx.redirect('/ssvmlist/SUBS_LIVE_CZ');
+    }
+    
+
+    
+    else if (value) {
         console.log(value);
         const remarks = `REMARKS=${key}`;
         const vmlist = JSON.parse(value).map(v => process.env[v] || process.env[v.replaceAll(".", "_")]);
