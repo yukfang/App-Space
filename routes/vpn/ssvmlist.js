@@ -8,21 +8,31 @@ router.get('/:key', async (ctx) => {
     const value = process.env[key];
     console.log(`ssvmlist exec , key = ${key}`)
 
-    if (key.toUpperCase() === 'MYIP') {
-        const myip = (process.env.PLATFORM === 'AZ_WEB_APP') ? ctx.request.headers['x-client-ip'] : ctx.request.ip;
-        const ipInfo = await getIpAddress(myip);
-        const debugInfo = {
-            request: (process.env.DEBUG_FLAG === 'true') ? ctx.request.headers : null,
-        };
-        const respData = {
-            ipInfo: ipInfo        
-        };
-        if (process.env.DEBUG_FLAG === 'true') {
-            respData.debugInfo = debugInfo;
-        }
+    if (key.toUpperCase() === 'YUNING') {
+        ctx.redirect('/ssvmlist/SUBS_YUNING');
+    } else if(key.toUpperCase() === 'ZGW') {
+        ctx.redirect('/ssvmlist/SUBS_ZGW');
+    } else if(key.toUpperCase() === 'TW_LIVE') {
+        ctx.redirect('/ssvmlist/SUBS_TW_LIVE');
+    } else if(key.toUpperCase() === 'MY_LIVE') {
+        ctx.redirect('/ssvmlist/SUBS_MY_LIVE');
+    } else if(key.toUpperCase() === 'LUO') {
+        ctx.redirect('/ssvmlist/SUBS_LUO');
+    } else if(key.toUpperCase() === 'LIYAN') {
+        ctx.redirect('/ssvmlist/SUBS_LIYAN');
+    } else if(key.toUpperCase() === 'MY_XIN') {
+        ctx.redirect('/ssvmlist/SUBS_XIN');
+    } else if(key.toUpperCase() === 'MY_ZHAO') {
+        ctx.redirect('/ssvmlist/SUBS_ZHAO');
+    } else if(key.toUpperCase() === 'MY_WANGYI') {
+        ctx.redirect('/ssvmlist/SUBS_WANGYI');
+    } else if(key.toUpperCase() === 'MY_LIVE_CZ') {
+        ctx.redirect('/ssvmlist/SUBS_LIVE_CZ');
+    }
+    
 
-        ctx.body = JSON.stringify(respData, null, 2);
-    } else if (value) {
+    
+    else if (value) {
         console.log(value);
         const remarks = `REMARKS=${key}`;
         const vmlist = JSON.parse(value).map(v => process.env[v] || process.env[v.replaceAll(".", "_")]);
