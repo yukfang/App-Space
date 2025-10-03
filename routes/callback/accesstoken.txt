@@ -1,0 +1,24 @@
+   data: {
+     code: 0,
+     message: 'success',
+     data: {
+       access_token: 'xxxx',
+       access_token_expire_in: 1759587964,
+       refresh_token: 'xxx',
+       refresh_token_expire_in: 4878250317,
+       open_id: 'xxx',
+       seller_name: 'Laila Store',
+       seller_base_region: 'MY',
+       user_type: 0,
+       granted_scopes: [Array]
+     },
+     request_id: '202509272226041F86C7009B71DA367C92'
+   }
+
+ 
+https://auth.qcreator.tech/callback/tt4b?app_key=6h92uttbf7u18&code=ROW_Ow4fGgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrlwQ4EYzMwz73SltfOp-Ge37p_0OHBcBRfQ6yGrzs6Gq&locale=en&shop_region=MY
+localhost/callback/tt4s?app_key=6h92uttbf7u18&code=ROW_94d9ywAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrguu0JQ-cY-vAl1AgwKquLsW0Y-tR2ijegS6IjrbR35Q&locale=en&shop_region=MY
+
+/callback/tt4s?app_key=6h92uttbf7u18&code=&locale=en&shop_region=MY
+
+http://localhost/callback/tt4s?app_key=6h92uttbf7u18&code=ROW_igRbrwAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrslJQedIHJpr2klkW0ZZrTSA6VfNXyoAXeSR5AzEu-3q&locale=en&shop_region=MY
