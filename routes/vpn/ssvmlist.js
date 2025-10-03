@@ -10,9 +10,12 @@ router.get('/:key', async (ctx) => {
 
     if (key.toUpperCase() === 'YUNING') {
         ctx.redirect('/ssvmlist/SUBS_YUNING');
-        // ctx.body = 'YUNING';
     } else if(key.toUpperCase() === 'ZGW') {
-        ctx.body = 'ZGW';
+        ctx.redirect('/ssvmlist/SUBS_ZGW');
+    } else if(key.toUpperCase() === 'TW_LIVE') {
+        ctx.redirect('/ssvmlist/SUBS_TW_LIVE');
+    } else if(key.toUpperCase() === 'MY_LIVE') {
+        ctx.redirect('/ssvmlist/SUBS_MY_LIVE');
     } else if (value) {
         console.log(value);
         const remarks = `REMARKS=${key}`;
