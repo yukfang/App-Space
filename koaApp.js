@@ -31,8 +31,10 @@ koaApp.use(async (ctx, next) => {
 
 // response
 koaApp.use(async (ctx, next) => {
-    if (ctx.path === '/data') {
+    if (ctx.path.toLowerCase() === 'Data'.toLowerCase()) {
+        ctx.body = 'Request :' + ctx.path;
 
+        // ctx.redirect('/ssvmlist/subs_yuning');
     } else {
         // ctx.body = 'Request :' + ctx.path;
         // console.log(`ctx.body : ${ctx.body}`)

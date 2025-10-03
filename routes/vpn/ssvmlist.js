@@ -8,20 +8,11 @@ router.get('/:key', async (ctx) => {
     const value = process.env[key];
     console.log(`ssvmlist exec , key = ${key}`)
 
-    if (key.toUpperCase() === 'MYIP') {
-        const myip = (process.env.PLATFORM === 'AZ_WEB_APP') ? ctx.request.headers['x-client-ip'] : ctx.request.ip;
-        const ipInfo = await getIpAddress(myip);
-        const debugInfo = {
-            request: (process.env.DEBUG_FLAG === 'true') ? ctx.request.headers : null,
-        };
-        const respData = {
-            ipInfo: ipInfo        
-        };
-        if (process.env.DEBUG_FLAG === 'true') {
-            respData.debugInfo = debugInfo;
-        }
-
-        ctx.body = JSON.stringify(respData, null, 2);
+    if (key.toUpperCase() === 'YUNING') {
+        ctx.redirect('/ssvmlist/SUBS_YUNING');
+        // ctx.body = 'YUNING';
+    } else if(key.toUpperCase() === 'ZGW') {
+        ctx.body = 'ZGW';
     } else if (value) {
         console.log(value);
         const remarks = `REMARKS=${key}`;
