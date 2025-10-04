@@ -1,24 +1,36 @@
-   data: {
-     code: 0,
-     message: 'success',
-     data: {
-       access_token: 'xxxx',
-       access_token_expire_in: 1759587964,
-       refresh_token: 'xxx',
-       refresh_token_expire_in: 4878250317,
-       open_id: 'xxx',
-       seller_name: 'Laila Store',
-       seller_base_region: 'MY',
-       user_type: 0,
-       granted_scopes: [Array]
-     },
-     request_id: '202509272226041F86C7009B71DA367C92'
-   }
-
- 
-https://auth.qcreator.tech/callback/tt4b?app_key=6h92uttbf7u18&code=ROW_Ow4fGgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrlwQ4EYzMwz73SltfOp-Ge37p_0OHBcBRfQ6yGrzs6Gq&locale=en&shop_region=MY
-localhost/callback/tt4s?app_key=6h92uttbf7u18&code=ROW_94d9ywAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrguu0JQ-cY-vAl1AgwKquLsW0Y-tR2ijegS6IjrbR35Q&locale=en&shop_region=MY
-
-/callback/tt4s?app_key=6h92uttbf7u18&code=&locale=en&shop_region=MY
-
-http://localhost/callback/tt4s?app_key=6h92uttbf7u18&code=ROW_igRbrwAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrslJQedIHJpr2klkW0ZZrTSA6VfNXyoAXeSR5AzEu-3q&locale=en&shop_region=MY
+  response.data: 
+  {
+    code: 0,
+    message: 'success',
+    data: {
+     access_token: 'ROW_h04SuwAAAAD8wKN3_r7uC38uRYPMWFUc913depI10Hgfehph0yWrcJ7c1Xzt1Dq6d5vyoMjciYb5vlm1QeQgCn77BhoMpZnKNrc3c7_8iO0mS9c8Jp5SWQz7jZYaBMxEnVjrSBRBKYBArzgSEFeC8AMc_Na-oH2WMobknB94F81QZkkT2edZMg',
+     access_token_expire_in: 1760107073,
+     refresh_token: '',
+     refresh_token_expire_in: 4878250317,
+     open_id: 'G8tkLAAAAADbhZgLcBLmQNtPng7grqOPyykdeJodAEu7qIU98OXYmw',
+     seller_name: 'Laila Affordable Store',
+     seller_base_region: 'MY',
+     user_type: 0,
+     granted_scopes: [
+       'seller.product.delete',
+       'seller.delivery.status.write',
+       'seller.fulfillment.basic',
+       'seller.global_product.write',
+       'seller.fulfillment.package.write',
+       'seller.global_product.delete',
+       'seller.global_product.info',
+       'seller.product.write',
+       'seller.global_product.category.info',
+       'seller.shop.info',
+       'seller.return_refund.basic',
+       'seller.authorization.info',
+       'seller.product.basic',
+       'seller.order.info',
+       'seller.logistics',
+       'seller.finance.info',
+       'serller.product.optimize',
+       'seller.global_product.image_trans_task'
+     ]
+   },
+   request_id: '20251003223753AA92910DDB9BA33F5CC5'
+ }
