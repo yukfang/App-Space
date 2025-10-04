@@ -6,9 +6,10 @@ datasource db {
 
 // 为 db 生成 Client
 generator clientdb {
-  provider   = "prisma-client-js"
-  output     = "./generated/clientdb"
-  datasource = "db"
+  provider      = "prisma-client-js"
+  output        = "./generated/clientdb"
+  datasource    = "db"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 // ================= Models =================

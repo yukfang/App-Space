@@ -179,6 +179,10 @@ const config = {
         "fromEnvVar": null,
         "value": "darwin-arm64",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "debian-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -196,6 +200,7 @@ const config = {
     "db"
   ],
   "activeProvider": "mysql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -204,8 +209,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// db: 用来存 API Token\ndatasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// 为 db 生成 Client\ngenerator clientdb {\n  provider   = \"prisma-client-js\"\n  output     = \"./generated/clientdb\"\n  datasource = \"db\"\n}\n\n// ================= Models =================\n\n// db 表：API 凭证\nmodel ApiCredential {\n  id                      Int      @id @default(autoincrement())\n  app_key                 String\n  access_token            String\n  access_token_expire_in  BigInt\n  refresh_token           String\n  refresh_token_expire_in BigInt\n  open_id                 String\n  seller_name             String\n  seller_base_region      String\n  user_type               Int\n  granted_scopes          Json\n  createdAt               DateTime @default(now())\n  updatedAt               DateTime @updatedAt\n}\n\n// Shops\nmodel Shop {\n  id          Int    @id @default(autoincrement())\n  seller_id   String @unique\n  seller_name String\n  test        String\n}\n",
-  "inlineSchemaHash": "97eb1be2f6c2e536e130a159e26699e8542eaca395ffbb1fa71cf2e37b3858c8",
+  "inlineSchema": "// db: 用来存 API Token\ndatasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// 为 db 生成 Client\ngenerator clientdb {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/clientdb\"\n  datasource    = \"db\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\n// ================= Models =================\n\n// db 表：API 凭证\nmodel ApiCredential {\n  id                      Int      @id @default(autoincrement())\n  app_key                 String\n  access_token            String\n  access_token_expire_in  BigInt\n  refresh_token           String\n  refresh_token_expire_in BigInt\n  open_id                 String\n  seller_name             String\n  seller_base_region      String\n  user_type               Int\n  granted_scopes          Json\n  createdAt               DateTime @default(now())\n  updatedAt               DateTime @updatedAt\n}\n\n// Shops\nmodel Shop {\n  id          Int    @id @default(autoincrement())\n  seller_id   String @unique\n  seller_name String\n  test        String\n}\n",
+  "inlineSchemaHash": "7fa6ba867ab0a7a0d1be07d7c935568cc15f8498ea8245612e790d5bd3eb212a",
   "copyEngine": true
 }
 
@@ -246,6 +251,10 @@ Object.assign(exports, Prisma)
 // file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
 path.join(process.cwd(), "prisma/generated/clientdb/libquery_engine-darwin-arm64.dylib.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
+path.join(process.cwd(), "prisma/generated/clientdb/libquery_engine-debian-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "prisma/generated/clientdb/schema.prisma")
