@@ -143,6 +143,12 @@ exports.Prisma.ShopScalarFieldEnum = {
   test: 'test'
 };
 
+exports.Prisma.AppScalarFieldEnum = {
+  id: 'id',
+  app_key: 'app_key',
+  app_secret: 'app_secret'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -178,10 +184,16 @@ exports.Prisma.ShopOrderByRelevanceFieldEnum = {
   test: 'test'
 };
 
+exports.Prisma.AppOrderByRelevanceFieldEnum = {
+  app_key: 'app_key',
+  app_secret: 'app_secret'
+};
+
 
 exports.Prisma.ModelName = {
   ApiCredential: 'ApiCredential',
-  Shop: 'Shop'
+  Shop: 'Shop',
+  App: 'App'
 };
 
 /**
