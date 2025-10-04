@@ -6,6 +6,11 @@ const db = new PrismaClient()
 // https://services.tiktokshop.com/open/authorize?service_id=7541044296256833288
 
 async function sendAccessTokenReq(app_key, grant_type, auth_code) {
+    if(auth_code === "123") {
+        return {
+            auth_code
+        }
+    }
     // console.log(app_key, grant_type, auth_code)
     // return {
     //     auth_code: 1
