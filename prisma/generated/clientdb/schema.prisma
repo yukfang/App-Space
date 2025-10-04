@@ -1,0 +1,40 @@
+// db: 用来存 API Token
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 为 db 生成 Client
+generator clientdb {
+  provider      = "prisma-client-js"
+  output        = "./generated/clientdb"
+  datasource    = "db"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+// ================= Models =================
+
+// db 表：API 凭证
+model ApiCredential {
+  id                      Int      @id @default(autoincrement())
+  app_key                 String
+  access_token            String
+  access_token_expire_in  BigInt
+  refresh_token           String
+  refresh_token_expire_in BigInt
+  open_id                 String
+  seller_name             String
+  seller_base_region      String
+  user_type               Int
+  granted_scopes          Json
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+// Shops
+model Shop {
+  id          Int    @id @default(autoincrement())
+  seller_id   String @unique
+  seller_name String
+  test        String
+}
