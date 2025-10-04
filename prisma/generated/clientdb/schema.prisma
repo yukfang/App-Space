@@ -1,7 +1,7 @@
 // db: 用来存 API Token
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("OPENAPI_TTS_DB_URL")
 }
 
 // 为 db 生成 Client
@@ -37,4 +37,11 @@ model Shop {
   seller_id   String @unique
   seller_name String
   test        String
+}
+
+// Apps 
+model App {
+  id         Int    @id @default(autoincrement())
+  app_key    String @unique
+  app_secret String
 }

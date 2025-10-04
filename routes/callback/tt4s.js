@@ -1,4 +1,3 @@
-
 const axios = require('axios');
 const { PrismaClient } = require('../../prisma/generated/clientdb/index.js');
 const db = new PrismaClient()
@@ -11,16 +10,8 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
             auth_code
         }
     }
-    // console.log(app_key, grant_type, auth_code)
-    // return {
-    //     auth_code: 1
-    // }
-    // app_key = '6h92uttbf7u18'
-    // grant_type = 'authorized_code'
-    // auth_code = 'ROW_Ow4fGgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrlwQ4EYzMwz73SltfOp-Ge37p_0OHBcBRfQ6yGrzs6Gq'
-    const app_secret = getAppSecret(app_key)
-    console.log(`app_key: ${app_key}, app_secret: ${app_secret}`)
-
+    const app_secret = await getAppSecret(app_key)
+    // console.log(`app_key: ${app_key}, app_secret: ${app_secret}`)
 
     const config = {
         method: 'GET',
@@ -35,6 +26,8 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
     console.log(config)
 
     var authResult = ''
+
+    /** Auth Request */
     try {
         const response = await axios(config);
         console.log(response.data)
@@ -50,7 +43,7 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
         data: {
             access_token: 'ROW_h04SuwAAAAD8wKN3_r7uC38uRYPMWFUc913depI10Hgfehph0yWrcJ7c1Xzt1Dq6d5vyoMjciYb5vlm1QeQgCn77BhoMpZnKNrc3c7_8iO0mS9c8Jp5SWQz7jZYaBMxEnVjrSBRBKYBArzgSEFeC8AMc_Na-oH2WMobknB94F81QZkkT2edZMg',
             access_token_expire_in: 1760107073,
-            refresh_token: 'ROW_803ybAAAAADxSWH1UpgP2wQC2C6sGmOlFfpxP8DHybBsTdK7gOcOFz0BsXQMZRB8UVQdXW9iRA4',
+            refresh_token: 'xxx',
             refresh_token_expire_in: 4878250317,
             open_id: 'G8tkLAAAAADbhZgLcBLmQNtPng7grqOPyykdeJodAEu7qIU98OXYmw',
             seller_name: 'Laila Affordable Store',
@@ -84,6 +77,7 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
     console.log(`Auth Result:`)
     console.log(authResult)
 
+    /** Save Auth Result to DB */
     if (authResult != '') {
         const appCredential = {
             app_key,
@@ -100,12 +94,11 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
         }
         console.log(appCredential)
 
-
         await db.ApiCredential.create({
             data: appCredential
         })
     } else {
-        console.error("Audit Result Error...");
+        console.error("Auth Result Error...");
     }
 
     return authResult
@@ -115,17 +108,31 @@ module.exports = {
     SendAccessTokenReq_TTS: sendAccessTokenReq
 }
 
-function getAppSecret(app_key) {
-    if (app_key === '6h92uttbf7u18') {
-        return 'cebc73ea67bfed023fdf141d65c9efa1c5b6a446'
-    } else {
+async function getAppSecret(app_key) {
+    const app_secret = await db.App.findUnique({
+        where: {
+            app_key
+        }
+    })
+
+    if (app_secret === null) {
         return ''
     }
+
+    // console.log(app_secret)
+    return app_secret.app_secret
+
+
+    // if (app_key === '6h92uttbf7u18') {
+    //     return 'cebc73ea67bfed023fdf141d65c9efa1c5b6a446'
+    // } else {
+    //     return ''
+    // }
 }
 
 async function test() {
-    const data = await sendAccessTokenReq('6h92uttbf7u18', 'authorized_code', 'ROW_nvzfzgAAAADiGyqJJkiguK8i0JxbqjAxekWAPquA8WKRHj9Mcyv9NjfCAHkdKW9zfxayOHKEWg9tvzeVC9duxsYtyz9WFYZVI3BXH6Cp7FG29HT81GmXrrsaRVqCw1Lp1koAHQvVOU5fxqKv_0S8ADRSsFfBjCX5')
-    console.log(data)
+    const app_secret = await getAppSecret('6h92uttbf7u18')
+    console.log(app_secret)
 }
 
 // test()

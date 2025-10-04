@@ -115,6 +115,12 @@ exports.Prisma.ShopScalarFieldEnum = {
   test: 'test'
 };
 
+exports.Prisma.AppScalarFieldEnum = {
+  id: 'id',
+  app_key: 'app_key',
+  app_secret: 'app_secret'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -150,10 +156,16 @@ exports.Prisma.ShopOrderByRelevanceFieldEnum = {
   test: 'test'
 };
 
+exports.Prisma.AppOrderByRelevanceFieldEnum = {
+  app_key: 'app_key',
+  app_secret: 'app_secret'
+};
+
 
 exports.Prisma.ModelName = {
   ApiCredential: 'ApiCredential',
-  Shop: 'Shop'
+  Shop: 'Shop',
+  App: 'App'
 };
 /**
  * Create the Client
@@ -203,18 +215,18 @@ const config = {
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": "DATABASE_URL",
+        "fromEnvVar": "OPENAPI_TTS_DB_URL",
         "value": null
       }
     }
   },
-  "inlineSchema": "// db: 用来存 API Token\ndatasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// 为 db 生成 Client\ngenerator clientdb {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/clientdb\"\n  datasource    = \"db\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\n// ================= Models =================\n\n// db 表：API 凭证\nmodel ApiCredential {\n  id                      Int      @id @default(autoincrement())\n  app_key                 String\n  access_token            String\n  access_token_expire_in  BigInt\n  refresh_token           String\n  refresh_token_expire_in BigInt\n  open_id                 String\n  seller_name             String\n  seller_base_region      String\n  user_type               Int\n  granted_scopes          Json\n  createdAt               DateTime @default(now())\n  updatedAt               DateTime @updatedAt\n}\n\n// Shops\nmodel Shop {\n  id          Int    @id @default(autoincrement())\n  seller_id   String @unique\n  seller_name String\n  test        String\n}\n",
-  "inlineSchemaHash": "7fa6ba867ab0a7a0d1be07d7c935568cc15f8498ea8245612e790d5bd3eb212a",
+  "inlineSchema": "// db: 用来存 API Token\ndatasource db {\n  provider = \"mysql\"\n  url      = env(\"OPENAPI_TTS_DB_URL\")\n}\n\n// 为 db 生成 Client\ngenerator clientdb {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/clientdb\"\n  datasource    = \"db\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\n// ================= Models =================\n\n// db 表：API 凭证\nmodel ApiCredential {\n  id                      Int      @id @default(autoincrement())\n  app_key                 String\n  access_token            String\n  access_token_expire_in  BigInt\n  refresh_token           String\n  refresh_token_expire_in BigInt\n  open_id                 String\n  seller_name             String\n  seller_base_region      String\n  user_type               Int\n  granted_scopes          Json\n  createdAt               DateTime @default(now())\n  updatedAt               DateTime @updatedAt\n}\n\n// Shops\nmodel Shop {\n  id          Int    @id @default(autoincrement())\n  seller_id   String @unique\n  seller_name String\n  test        String\n}\n\n// Apps \nmodel App {\n  id         Int    @id @default(autoincrement())\n  app_key    String @unique\n  app_secret String\n}\n",
+  "inlineSchemaHash": "9a6630ddcc0b355aa5bfb303a46dcbe61a573f6c6061917aef53c1b9b97ae79a",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"ApiCredential\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"app_key\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token_expire_in\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"refresh_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token_expire_in\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"open_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_base_region\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user_type\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"granted_scopes\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Shop\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"seller_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"test\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"ApiCredential\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"app_key\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token_expire_in\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"refresh_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token_expire_in\",\"kind\":\"scalar\",\"type\":\"BigInt\"},{\"name\":\"open_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_base_region\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user_type\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"granted_scopes\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Shop\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"seller_id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seller_name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"test\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"App\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"app_key\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"app_secret\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),
@@ -228,7 +240,7 @@ config.compilerWasm = undefined
 
 config.injectableEdgeEnv = () => ({
   parsed: {
-    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+    OPENAPI_TTS_DB_URL: typeof globalThis !== 'undefined' && globalThis['OPENAPI_TTS_DB_URL'] || typeof process !== 'undefined' && process.env && process.env.OPENAPI_TTS_DB_URL || undefined
   }
 })
 
