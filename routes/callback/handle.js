@@ -25,7 +25,6 @@ router.get('/:path*', async (ctx) => {
         const shop_region = queryParams.shop_region || '';
 
 
-
         if (pathSegments[0] === 'tt4s') {
             const result = await SendAccessTokenReq_TTS(app_key, grant_type, auth_code)
 
