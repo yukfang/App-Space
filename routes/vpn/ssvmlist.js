@@ -5,6 +5,8 @@ const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const REMARKS = {
     "subs_yuning"   : "Dev环境",
     "subs_luo"      : "罗总",
+    "subs_wangyi"   : "王益",
+    "subs_lizong"   : "李总",
 }
 
 router.get('/:key', async (ctx) => {
