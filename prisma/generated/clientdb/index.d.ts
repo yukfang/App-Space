@@ -2959,18 +2959,27 @@ export namespace Prisma {
     id: number | null
     app_key: string | null
     app_secret: string | null
+    redirect_domain: string | null
+    success_path: string | null
+    failure_path: string | null
   }
 
   export type AppMaxAggregateOutputType = {
     id: number | null
     app_key: string | null
     app_secret: string | null
+    redirect_domain: string | null
+    success_path: string | null
+    failure_path: string | null
   }
 
   export type AppCountAggregateOutputType = {
     id: number
     app_key: number
     app_secret: number
+    redirect_domain: number
+    success_path: number
+    failure_path: number
     _all: number
   }
 
@@ -2987,18 +2996,27 @@ export namespace Prisma {
     id?: true
     app_key?: true
     app_secret?: true
+    redirect_domain?: true
+    success_path?: true
+    failure_path?: true
   }
 
   export type AppMaxAggregateInputType = {
     id?: true
     app_key?: true
     app_secret?: true
+    redirect_domain?: true
+    success_path?: true
+    failure_path?: true
   }
 
   export type AppCountAggregateInputType = {
     id?: true
     app_key?: true
     app_secret?: true
+    redirect_domain?: true
+    success_path?: true
+    failure_path?: true
     _all?: true
   }
 
@@ -3092,6 +3110,9 @@ export namespace Prisma {
     id: number
     app_key: string
     app_secret: string
+    redirect_domain: string
+    success_path: string
+    failure_path: string
     _count: AppCountAggregateOutputType | null
     _avg: AppAvgAggregateOutputType | null
     _sum: AppSumAggregateOutputType | null
@@ -3117,6 +3138,9 @@ export namespace Prisma {
     id?: boolean
     app_key?: boolean
     app_secret?: boolean
+    redirect_domain?: boolean
+    success_path?: boolean
+    failure_path?: boolean
   }, ExtArgs["result"]["app"]>
 
 
@@ -3125,9 +3149,12 @@ export namespace Prisma {
     id?: boolean
     app_key?: boolean
     app_secret?: boolean
+    redirect_domain?: boolean
+    success_path?: boolean
+    failure_path?: boolean
   }
 
-  export type AppOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "app_key" | "app_secret", ExtArgs["result"]["app"]>
+  export type AppOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "app_key" | "app_secret" | "redirect_domain" | "success_path" | "failure_path", ExtArgs["result"]["app"]>
 
   export type $AppPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "App"
@@ -3136,6 +3163,9 @@ export namespace Prisma {
       id: number
       app_key: string
       app_secret: string
+      redirect_domain: string
+      success_path: string
+      failure_path: string
     }, ExtArgs["result"]["app"]>
     composites: {}
   }
@@ -3508,6 +3538,9 @@ export namespace Prisma {
     readonly id: FieldRef<"App", 'Int'>
     readonly app_key: FieldRef<"App", 'String'>
     readonly app_secret: FieldRef<"App", 'String'>
+    readonly redirect_domain: FieldRef<"App", 'String'>
+    readonly success_path: FieldRef<"App", 'String'>
+    readonly failure_path: FieldRef<"App", 'String'>
   }
     
 
@@ -3875,7 +3908,10 @@ export namespace Prisma {
   export const AppScalarFieldEnum: {
     id: 'id',
     app_key: 'app_key',
-    app_secret: 'app_secret'
+    app_secret: 'app_secret',
+    redirect_domain: 'redirect_domain',
+    success_path: 'success_path',
+    failure_path: 'failure_path'
   };
 
   export type AppScalarFieldEnum = (typeof AppScalarFieldEnum)[keyof typeof AppScalarFieldEnum]
@@ -3936,7 +3972,10 @@ export namespace Prisma {
 
   export const AppOrderByRelevanceFieldEnum: {
     app_key: 'app_key',
-    app_secret: 'app_secret'
+    app_secret: 'app_secret',
+    redirect_domain: 'redirect_domain',
+    success_path: 'success_path',
+    failure_path: 'failure_path'
   };
 
   export type AppOrderByRelevanceFieldEnum = (typeof AppOrderByRelevanceFieldEnum)[keyof typeof AppOrderByRelevanceFieldEnum]
@@ -4151,12 +4190,18 @@ export namespace Prisma {
     id?: IntFilter<"App"> | number
     app_key?: StringFilter<"App"> | string
     app_secret?: StringFilter<"App"> | string
+    redirect_domain?: StringFilter<"App"> | string
+    success_path?: StringFilter<"App"> | string
+    failure_path?: StringFilter<"App"> | string
   }
 
   export type AppOrderByWithRelationInput = {
     id?: SortOrder
     app_key?: SortOrder
     app_secret?: SortOrder
+    redirect_domain?: SortOrder
+    success_path?: SortOrder
+    failure_path?: SortOrder
     _relevance?: AppOrderByRelevanceInput
   }
 
@@ -4167,12 +4212,18 @@ export namespace Prisma {
     OR?: AppWhereInput[]
     NOT?: AppWhereInput | AppWhereInput[]
     app_secret?: StringFilter<"App"> | string
+    redirect_domain?: StringFilter<"App"> | string
+    success_path?: StringFilter<"App"> | string
+    failure_path?: StringFilter<"App"> | string
   }, "id" | "app_key">
 
   export type AppOrderByWithAggregationInput = {
     id?: SortOrder
     app_key?: SortOrder
     app_secret?: SortOrder
+    redirect_domain?: SortOrder
+    success_path?: SortOrder
+    failure_path?: SortOrder
     _count?: AppCountOrderByAggregateInput
     _avg?: AppAvgOrderByAggregateInput
     _max?: AppMaxOrderByAggregateInput
@@ -4187,6 +4238,9 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter<"App"> | number
     app_key?: StringWithAggregatesFilter<"App"> | string
     app_secret?: StringWithAggregatesFilter<"App"> | string
+    redirect_domain?: StringWithAggregatesFilter<"App"> | string
+    success_path?: StringWithAggregatesFilter<"App"> | string
+    failure_path?: StringWithAggregatesFilter<"App"> | string
   }
 
   export type ApiCredentialCreateInput = {
@@ -4347,40 +4401,61 @@ export namespace Prisma {
   export type AppCreateInput = {
     app_key: string
     app_secret: string
+    redirect_domain: string
+    success_path: string
+    failure_path: string
   }
 
   export type AppUncheckedCreateInput = {
     id?: number
     app_key: string
     app_secret: string
+    redirect_domain: string
+    success_path: string
+    failure_path: string
   }
 
   export type AppUpdateInput = {
     app_key?: StringFieldUpdateOperationsInput | string
     app_secret?: StringFieldUpdateOperationsInput | string
+    redirect_domain?: StringFieldUpdateOperationsInput | string
+    success_path?: StringFieldUpdateOperationsInput | string
+    failure_path?: StringFieldUpdateOperationsInput | string
   }
 
   export type AppUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     app_key?: StringFieldUpdateOperationsInput | string
     app_secret?: StringFieldUpdateOperationsInput | string
+    redirect_domain?: StringFieldUpdateOperationsInput | string
+    success_path?: StringFieldUpdateOperationsInput | string
+    failure_path?: StringFieldUpdateOperationsInput | string
   }
 
   export type AppCreateManyInput = {
     id?: number
     app_key: string
     app_secret: string
+    redirect_domain: string
+    success_path: string
+    failure_path: string
   }
 
   export type AppUpdateManyMutationInput = {
     app_key?: StringFieldUpdateOperationsInput | string
     app_secret?: StringFieldUpdateOperationsInput | string
+    redirect_domain?: StringFieldUpdateOperationsInput | string
+    success_path?: StringFieldUpdateOperationsInput | string
+    failure_path?: StringFieldUpdateOperationsInput | string
   }
 
   export type AppUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     app_key?: StringFieldUpdateOperationsInput | string
     app_secret?: StringFieldUpdateOperationsInput | string
+    redirect_domain?: StringFieldUpdateOperationsInput | string
+    success_path?: StringFieldUpdateOperationsInput | string
+    failure_path?: StringFieldUpdateOperationsInput | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -4655,6 +4730,9 @@ export namespace Prisma {
     id?: SortOrder
     app_key?: SortOrder
     app_secret?: SortOrder
+    redirect_domain?: SortOrder
+    success_path?: SortOrder
+    failure_path?: SortOrder
   }
 
   export type AppAvgOrderByAggregateInput = {
@@ -4665,12 +4743,18 @@ export namespace Prisma {
     id?: SortOrder
     app_key?: SortOrder
     app_secret?: SortOrder
+    redirect_domain?: SortOrder
+    success_path?: SortOrder
+    failure_path?: SortOrder
   }
 
   export type AppMinOrderByAggregateInput = {
     id?: SortOrder
     app_key?: SortOrder
     app_secret?: SortOrder
+    redirect_domain?: SortOrder
+    success_path?: SortOrder
+    failure_path?: SortOrder
   }
 
   export type AppSumOrderByAggregateInput = {
