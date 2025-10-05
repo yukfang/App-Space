@@ -146,7 +146,10 @@ exports.Prisma.ShopScalarFieldEnum = {
 exports.Prisma.AppScalarFieldEnum = {
   id: 'id',
   app_key: 'app_key',
-  app_secret: 'app_secret'
+  app_secret: 'app_secret',
+  redirect_domain: 'redirect_domain',
+  success_path: 'success_path',
+  failure_path: 'failure_path'
 };
 
 exports.Prisma.SortOrder = {
@@ -186,7 +189,10 @@ exports.Prisma.ShopOrderByRelevanceFieldEnum = {
 
 exports.Prisma.AppOrderByRelevanceFieldEnum = {
   app_key: 'app_key',
-  app_secret: 'app_secret'
+  app_secret: 'app_secret',
+  redirect_domain: 'redirect_domain',
+  success_path: 'success_path',
+  failure_path: 'failure_path'
 };
 
 
