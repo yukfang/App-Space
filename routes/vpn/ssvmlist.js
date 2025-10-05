@@ -41,7 +41,7 @@ router.get('/:key', async (ctx) => {
     
     else if (value) {
         console.log(value);
-        const remarks = `REMARKS=${REMARKS[key] || key}`;
+        const remarks = `REMARKS=${REMARKS[key] || (key + '_')}`;
         const vmlist = JSON.parse(value).map(v => process.env[v] || process.env[v.replaceAll(".", "_")]);
         console.log(vmlist);
         const instances = vmlist.join("\r\n");
