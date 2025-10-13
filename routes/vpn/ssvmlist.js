@@ -2,6 +2,11 @@ const Router = require('koa-router');
 const router = new Router({ prefix: '/ssvmlist' });
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Sample: 
+// STATUS=剩余流量：695.63GB.♥.到期时间：2025-11-14
+// REMARKS=少数人
+// ssr://wYXJhbT1NalF5TlRBNk4zRTJTSEY0VnpOeldBJnJlbWFya3M9NmFhWjVyaXZNREV0U1VWUVRDM2xnSTNuam9jeExqQSZncm91cD01YkNSNXBXdzVMcTY
+
 const REMARKS = {
     "subs_yuning"   : "Dev环境",
     "subs_luo"      : "罗总",
@@ -42,6 +47,9 @@ router.get('/:key', async (ctx) => {
     else if (value) {
         console.log(value);
         const remarks = `REMARKS=${REMARKS[key.toLowerCase()] || (key + '_')}`;
+
+        // console.log(`Remark: ${remarks}`)
+
         const vmlist = JSON.parse(value).map(v => process.env[v] || process.env[v.replaceAll(".", "_")]);
         console.log(vmlist);
         const instances = vmlist.join("\r\n");
