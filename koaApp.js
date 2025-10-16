@@ -8,6 +8,7 @@ const routerEcommHM = require('./routes/ecomm/hm');
 const routerEcommDisney = require('./routes/ecomm/disney');
 const callbackRouter = require('./routes/callback/handle');
 const fileDownloadRouter = require('./routes/file/download');
+const proxyRouter = require('./routes/proxy/index');
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config();
 
@@ -64,6 +65,7 @@ koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
         return err;
     }
 }))
+koaApp.use(proxyRouter.routes()).use(proxyRouter.allowedMethods())
 
 
 
