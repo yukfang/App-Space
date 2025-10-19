@@ -53,13 +53,14 @@ router.get('/:key', async (ctx) => {
     } else {
         keys = subs_key_list.filter(k => k === key)
     }
+    keys = [...new Set(keys)].sort()
+
 
     let values = []
     for (const key of keys) {
         const value = process.env[key]
         values = [...values, ...JSON.parse(value)]
     }
-    values = [...new Set(values)]
 
     console.log(`keys = ${keys}, values = ${values}`)
     if (values) {
@@ -70,7 +71,7 @@ router.get('/:key', async (ctx) => {
             vmlist.push(process.env[value] || process.env[value.replaceAll(".", "_")])
         }
         console.log(vmlist);
-        const instances = vmlist.sort().join("\r\n");
+        const instances = vmlist.join("\r\n");
         const data = Buffer.from(remarks + "\r\n" + instances).toString('base64');
         ctx.body = data;
     } else {
