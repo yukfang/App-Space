@@ -53,7 +53,7 @@ router.get('/:key', async (ctx) => {
     } else {
         keys = subs_key_list.filter(k => k === key)
     }
-    keys = [...new Set(keys)].sort()
+    // keys = [...new Set(keys)].sort()
 
 
     let values = []
@@ -61,6 +61,7 @@ router.get('/:key', async (ctx) => {
         const value = process.env[key]
         values = [...values, ...JSON.parse(value)]
     }
+    values = [...new Set(values)].sort()
 
     console.log(`keys = ${keys}, values = ${values}`)
     if (values) {
