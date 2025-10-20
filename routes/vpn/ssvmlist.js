@@ -1,48 +1,76 @@
+const { default: axios } = require('axios');
 const Router = require('koa-router');
 const router = new Router({ prefix: '/ssvmlist' });
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Sample: 
+// STATUS=剩余流量：695.63GB.♥.到期时间：2025-11-14
+// REMARKS=少数人
+// ssr://wYXJhbT1NalF5TlRBNk4zRTJTSEY0VnpOeldBJnJlbWFya3M9NmFhWjVyaXZNREV0U1VWUVRDM2xnSTNuam9jeExqQSZncm91cD01YkNSNXBXdzVMcTY
+
 const REMARKS = {
-    "subs_yuning"   : "Dev环境",
-    "subs_luo"      : "罗总",
-    "subs_wangyi"   : "王益",
-    "subs_lizong"   : "李总",
+    "subs_yuning": "Dev环境",
+    "subs_luo": "罗总",
+    "subs_wangyi": "王益",
+    "subs_lizong": "李总",
 }
 
 router.get('/:key', async (ctx) => {
     // await delayms(1000);
     const key = ctx.params.key.toUpperCase();
-    const value = process.env[key];
-    console.log(`ssvmlist exec , key = ${key}`)
+    console.log(`Req: key = ${key}`)
 
+    /** Redirect If key matches */
     if (key.toUpperCase() === 'YUNING') {
         ctx.redirect('/ssvmlist/SUBS_YUNING');
-    } else if(key.toUpperCase() === 'ZGW') {
+    } else if (key.toUpperCase() === 'ZGW') {
         ctx.redirect('/ssvmlist/SUBS_ZGW');
-    } else if(key.toUpperCase() === 'TW_LIVE') {
+    } else if (key.toUpperCase() === 'TW_LIVE') {
         ctx.redirect('/ssvmlist/SUBS_TW_LIVE');
-    } else if(key.toUpperCase() === 'MY_LIVE') {
+    } else if (key.toUpperCase() === 'MY_LIVE') {
         ctx.redirect('/ssvmlist/SUBS_MY_LIVE');
-    } else if(key.toUpperCase() === 'LUO') {
+    } else if (key.toUpperCase() === 'LUO') {
         ctx.redirect('/ssvmlist/SUBS_LUO');
-    } else if(key.toUpperCase() === 'LIYAN') {
+    } else if (key.toUpperCase() === 'LIYAN') {
         ctx.redirect('/ssvmlist/SUBS_LIYAN');
-    } else if(key.toUpperCase() === 'MY_XIN') {
+    } else if (key.toUpperCase() === 'MY_XIN') {
         ctx.redirect('/ssvmlist/SUBS_XIN');
-    } else if(key.toUpperCase() === 'MY_ZHAO') {
+    } else if (key.toUpperCase() === 'MY_ZHAO') {
         ctx.redirect('/ssvmlist/SUBS_ZHAO');
-    } else if(key.toUpperCase() === 'MY_WANGYI') {
+    } else if (key.toUpperCase() === 'MY_WANGYI') {
         ctx.redirect('/ssvmlist/SUBS_WANGYI');
-    } else if(key.toUpperCase() === 'MY_LIVE_CZ') {
+    } else if (key.toUpperCase() === 'MY_LIVE_CZ') {
         ctx.redirect('/ssvmlist/SUBS_LIVE_CZ');
     }
-    
 
-    
-    else if (value) {
-        console.log(value);
+
+    const subs_key_list = [...new Set(Object.keys(process.env).filter(k => k.startsWith('SUBS_')))]
+    console.log(`subs_key_list = ${subs_key_list}`)
+
+    let keys = []
+    if (key.toUpperCase() === 'SUBS_ALL') {
+        keys = subs_key_list.filter(k => k !== 'SUBS_ALL')
+    } else {
+        keys = subs_key_list.filter(k => k === key)
+    }
+    // keys = [...new Set(keys)].sort()
+
+
+    let values = []
+    for (const key of keys) {
+        const value = process.env[key]
+        values = [...values, ...JSON.parse(value)]
+    }
+    values = [...new Set(values)].sort()
+
+    console.log(`keys = ${keys}, values = ${values}`)
+    if (values) {
         const remarks = `REMARKS=${REMARKS[key.toLowerCase()] || (key + '_')}`;
-        const vmlist = JSON.parse(value).map(v => process.env[v] || process.env[v.replaceAll(".", "_")]);
+
+        const vmlist = []
+        for (const value of values) {
+            vmlist.push(process.env[value] || process.env[value.replaceAll(".", "_")])
+        }
         console.log(vmlist);
         const instances = vmlist.join("\r\n");
         const data = Buffer.from(remarks + "\r\n" + instances).toString('base64');
@@ -53,14 +81,14 @@ router.get('/:key', async (ctx) => {
     }
 });
 
+// 
 
-
-async function getIpAddress(ip_addr) {
-    const endpoint      = `https://qifu-api.baidubce.com/ip/geo/v1/district?ip=${ip_addr}`;
-    const method        = 'GET';
-    let param       = { };
-    let body        = null;
-    const header    = {
+async function getMyIpInfo() {
+    const endpoint = `https://ipinfo.io/what-is-my-ip`;
+    const method = 'GET';
+    let param = {};
+    let body = null;
+    const header = {
         'Accept': '*/*',
         'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh-HK;q=0.7,zh;q=0.6',
         'Connection': 'keep-alive',
@@ -73,15 +101,21 @@ async function getIpAddress(ip_addr) {
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"macOS"'
     }
-    const response = (await proxying(method, endpoint, header, param, body, true));
+    const response = (await axios({
+        method,
+        url: endpoint,
+        headers: header,
+        params: param,
+        data: body
+    }));
     // console.log(response.data)
 
-    if(response.status == 200 ) {
+    if (response.status == 200) {
         const data = JSON.parse(response.data);
         return data;
 
     } else {
-        console.log(`Get IpInfo ${ip_addr} Error !!!`)
+        console.log(`Get IpInfo Error !!!`)
         return null;
     }
 }

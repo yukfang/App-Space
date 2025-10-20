@@ -34,7 +34,7 @@ router.get('/:path*', async (ctx) => {
         } else {
             var afterAuthUrl = ''
 
-            if (pathSegments[0] === 'tt4d') {
+            if (pathSegments[0] === 'tt4b') {
                 afterAuthUrl = `${pathSegments[0]}: Not Implemented`
             } else if (pathSegments[0] === 'tt4d') {
                 afterAuthUrl = `${pathSegments[0]}: Not Implemented`
