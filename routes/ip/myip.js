@@ -22,11 +22,12 @@ router.get('/:key', async (ctx) => {
 
 
 async function getIpAddress() {
-    const endpoint      = `https://ip-check-perf.radar.cloudflare.com`;
+    const endpoint      = `https://ipinfo.io/what-is-my-ip`;
     const method        = 'GET';
     let param       = { };
     let body        = null;
-    const header    = { }
+    const header = {
+    }
     const response = (await proxying(method, endpoint, header, param, body, true));
     console.log(response.data)
 
