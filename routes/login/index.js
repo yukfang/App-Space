@@ -8,8 +8,8 @@ const key = fs.readFileSync(keyPath, 'utf8');
 
 // 模拟数据库用户表
 const USERS = {
-    "user1@123" : {
-        name: "user1",
+    "xinxin@XinXin2025" : {
+        name: "XinXin",
         dstAddr: 'aws.my.002.qcreator.tech',
         dstPort: 22,
         sshUserName: 'proxyuser',
@@ -17,8 +17,8 @@ const USERS = {
         localPort: 7777,
         defaultPageUrl: "https://www.qcreator.tech/",
         profiles: [
-            {name: "Shopee Shop 1"}, 
-            {name: "Shopee Shop 2"}, 
+            {name: "XinXin 1"}, 
+            {name: "XinXin 2"}, 
         ]
     },
     "user2@456" : {
