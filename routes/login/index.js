@@ -15,7 +15,7 @@ const USERS = {
         sshUserName: 'proxyuser',
         privateKey: key,
         localPort: 7777,
-        defaultPageUrl: "https://www.qcreator.tech/",
+        defaultPageUrl: "https://seller.shopee.com.my",
         profiles: [
             {name: "XinXin 1"}, 
             {name: "XinXin 2"}, 
@@ -28,7 +28,7 @@ const USERS = {
         sshUserName: 'proxyuser',
         privateKey: key,
         localPort: 7777,
-        defaultPageUrl: "https://shopee.my/",
+        defaultPageUrl: "https://seller.shopee.com.my",
         profiles: [
             {name: "Shopee Shop 3"}, 
         ]
