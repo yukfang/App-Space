@@ -8,7 +8,7 @@ const USERS = {
         dstAddr: '120.55.244.123',
         dstPort: 22,
         sshUserName: 'root',
-        socksPort: 7777,
+        localPort: 7777,
         pageUrl: "https://www.qcreator.tech/user1.html",
         profiles: [
             {name: "Shopee Shop 1"}, 
@@ -20,7 +20,7 @@ const USERS = {
         dstAddr: '120.55.244.123',
         dstPort: 22,
         sshUserName: 'root',
-        socksPort: 7777,
+        localPort: 7777,
         pageUrl: "https://www.qcreator.tech/user2.html",
         profiles: [
             {name: "Shopee Shop 3"}, 
