@@ -25,7 +25,7 @@ const USERS = {
         name: "user2",
         dstAddr: '120.55.244.123',
         dstPort: 22,
-        sshUserName: 'proxyuser',
+        sshUserName: 'root',
         privateKey: key,
         localPort: 7777,
         defaultPageUrl: "https://www.qcreator.tech/",
