@@ -9,6 +9,7 @@ const routerEcommDisney = require('./routes/ecomm/disney');
 const callbackRouter = require('./routes/callback/handle');
 const fileDownloadRouter = require('./routes/file/download');
 const proxyRouter = require('./routes/proxy/index');
+const loginRouter = require('./routes/login/index')
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config();
 
@@ -66,6 +67,7 @@ koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
     }
 }))
 koaApp.use(proxyRouter.routes()).use(proxyRouter.allowedMethods())
+koaApp.use(loginRouter.routes()).use(loginRouter.allowedMethods())
 
 
 
@@ -73,8 +75,7 @@ koaApp.use(proxyRouter.routes()).use(proxyRouter.allowedMethods())
 
 
 
-async function init() {
-}
+async function init() {}
 
 module.exports = {
     koaApp,
