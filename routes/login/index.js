@@ -1,8 +1,10 @@
 const Router = require('koa-router');
 const fs = require('fs')
+const path = require('path');
 const router = new Router({ prefix: '/login' });
 
-const key = fs.readFileSync('./id_proxyuser.key.txt', 'utf-8')
+const keyPath = path.join(__dirname, 'id_proxyuser.key.txt');
+const key = fs.readFileSync(keyPath, 'utf8');
 
 // 模拟数据库用户表
 const USERS = {
