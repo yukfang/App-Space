@@ -22,11 +22,11 @@ const USERS = {
     },
     "myf@KSMY" : {
         name: "CX",
-        dstAddr: 'aws.my.009.qcreator.tech',
+        dstAddr: 'aws.my.002.qcreator.tech',
         dstPort: 22,
         sshUserName: 'proxyuser',
         privateKey: key,
-        localPort: 7777,
+        localPort: 6666,
         profiles: [
             {id: 1, name: "Shopee Shop 3", defaultUrl: 'https://seller.shopee.com.my'}, 
         ]
