@@ -20,15 +20,15 @@ const USERS = {
             {id: 2, name: "XinXin 2", defaultUrl: 'https://seller.shopee.com.my'}, 
         ]
     },
-    "myf@KSMY" : {
-        name: "CX",
+    "dan@Dan_ksmy" : {
+        name: "Dan",
         dstAddr: 'aws.tw.002.qcreator.tech',
         dstPort: 22,
         sshUserName: 'proxyuser',
         privateKey: key,
         localPort: 6666,
         profiles: [
-            {id: 1, name: "Shopee Shop 3", defaultUrl: 'https://seller.shopee.com.my'}, 
+            {id: 1, name: "Shopee Shop TW", defaultUrl: 'https://seller.shopee.com'}, 
         ]
     }
 }
