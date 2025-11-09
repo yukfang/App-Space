@@ -10,7 +10,7 @@ const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const REMARKS = {
     "subs_yuning": "Dev环境",
-    "subs_luo": "罗总",
+    "subs_luo"   : "罗总",
     "subs_wangyi": "王益",
     "subs_lizong": "李总",
 }
@@ -41,6 +41,8 @@ router.get('/:key', async (ctx) => {
         ctx.redirect('/ssvmlist/SUBS_WANGYI');
     } else if (key.toUpperCase() === 'MY_LIVE_CZ') {
         ctx.redirect('/ssvmlist/SUBS_LIVE_CZ');
+    } else if (key.toUpperCase() === 'Dan' || key.toUpperCase() === 'SUBS_TW_LIVE') {
+        ctx.redirect('/ssvmlist/SUBS_DAN');
     }
 
 
