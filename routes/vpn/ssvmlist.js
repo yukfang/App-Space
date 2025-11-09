@@ -10,7 +10,7 @@ const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const REMARKS = {
     "subs_yuning": "Dev环境",
-    "subs_luo"   : "罗总",
+    "subs_luo": "罗总",
     "subs_wangyi": "王益",
     "subs_lizong": "李总",
 }
@@ -21,25 +21,16 @@ router.get('/:key', async (ctx) => {
     console.log(`Req: key = ${key}`)
 
     /** Redirect If key matches */
-    if (key.toUpperCase() === 'YUNING') {
-        ctx.redirect('/ssvmlist/SUBS_YUNING');
-    } else if (key.toUpperCase() === 'ZGW') {
-        ctx.redirect('/ssvmlist/SUBS_ZGW');
-    } else if (key.toUpperCase() === 'MY_LIVE') {
-        ctx.redirect('/ssvmlist/SUBS_MY_LIVE');
-    } else if (key.toUpperCase() === 'LUO') {
-        ctx.redirect('/ssvmlist/SUBS_LUO');
-    } else if (key.toUpperCase() === 'LIYAN') {
-        ctx.redirect('/ssvmlist/SUBS_LIYAN');
-    } else if (key.toUpperCase() === 'MY_XIN') {
-        ctx.redirect('/ssvmlist/SUBS_XIN');
-    }  else if (key.toUpperCase() === 'MY_WANGYI') {
-        ctx.redirect('/ssvmlist/SUBS_WANGYI');
-    } else if (key.toUpperCase() === 'MY_LIVE_CZ') {
-        ctx.redirect('/ssvmlist/SUBS_LIVE_CZ');
-    } else if (key.toUpperCase() === 'TW_LIVE') {
-        ctx.redirect('/ssvmlist/SUBS_DAN');
-    }
+    if (key.toUpperCase() === 'YUNING')     { ctx.redirect('/ssvmlist/SUBS_YUNING') }
+    else if (key.toUpperCase() === 'LIYAN') { ctx.redirect('/ssvmlist/SUBS_LIYAN') }
+    else if (key.toUpperCase() === 'ZGW')   { ctx.redirect('/ssvmlist/SUBS_ZGW') }
+
+    else if (key.toUpperCase() === 'MY_LIVE')   { ctx.redirect('/ssvmlist/SUBS_MY_LIVE') }
+    else if (key.toUpperCase() === 'LUO')       { ctx.redirect('/ssvmlist/SUBS_LUO') }
+    else if (key.toUpperCase() === 'MY_XIN')    { ctx.redirect('/ssvmlist/SUBS_XIN') }
+    else if (key.toUpperCase() === 'MY_WANGYI') { ctx.redirect('/ssvmlist/SUBS_WANGYI') }
+    else if (key.toUpperCase() === 'MY_LIVE_CZ'){ ctx.redirect('/ssvmlist/SUBS_LIVE_CZ') }
+    else if (key.toUpperCase() === 'TW_LIVE')   { ctx.redirect('/ssvmlist/SUBS_DAN') }
 
 
     const subs_key_list = [...new Set(Object.keys(process.env).filter(k => k.startsWith('SUBS_')))]
