@@ -20,7 +20,7 @@ const USERS = {
             {id: 2, name: "XinXin 2", defaultUrl: 'https://seller.shopee.com.my'}, 
         ]
     },
-    "dan@Dan_ksmy" : {
+    "dan@Dan@2025" : {
         name: "Dan",
         dstAddr: 'aws.tw.002.qcreator.tech',
         dstPort: 22,
@@ -28,7 +28,7 @@ const USERS = {
         privateKey: key,
         localPort: 6666,
         profiles: [
-            {id: 1, name: "Shopee Shop TW", defaultUrl: 'https://seller.shopee.com'}, 
+            {id: 1, name: "Shopee Shop TW", defaultUrl: 'https://seller.shopee.tw'}, 
         ]
     }
 }
