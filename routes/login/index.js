@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path');
 const router = new Router({ prefix: '/login' });
 
-const keyPath = path.join(__dirname, 'id_proxyuser.key.txt');
+const keyPath = path.join(__dirname, 'id_proxyuser.key');
 const key = fs.readFileSync(keyPath, 'utf8');
 
 // 模拟数据库用户表
@@ -22,7 +22,7 @@ const USERS = {
     },
     "myf@KSMY" : {
         name: "CX",
-        dstAddr: 'aws.my.002.qcreator.tech',
+        dstAddr: 'aws.tw.002.qcreator.tech',
         dstPort: 22,
         sshUserName: 'proxyuser',
         privateKey: key,
