@@ -4,6 +4,7 @@ const ssvmlistRouter = require('./routes/vpn/ssvmlist');
 const sshTunnelRouter = require('./routes/ssh/tunnel')
 const ipRouter = require('./routes/ip/myip');
 const routerEcommPacsun = require('./routes/tokens/pacsun');
+const routeTokensTTS = require('./routes/tokens/tts');
 const callbackRouter = require('./routes/callback/handle');
 const fileDownloadRouter = require('./routes/file/download');
 const proxyRouter = require('./routes/proxy/index');
@@ -46,6 +47,7 @@ koaApp.use(async (ctx, next) => {
 // routes
 koaApp.use(ssvmlistRouter.routes()).use(ssvmlistRouter.allowedMethods())
 koaApp.use(routerEcommPacsun.routes()).use(routerEcommPacsun.allowedMethods())
+koaApp.use(routeTokensTTS.routes()).use(routeTokensTTS.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
 koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
 koaApp.use(fileDownloadRouter.routes()).use(fileDownloadRouter.allowedMethods({

@@ -13,7 +13,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 let SHOP = ''
 let shopInfo = {}
 
-const router = new Router({ prefix: `/tokens` });
+const router = new Router({ prefix: `/tokens/tts` });
 
 router.get('/:key', async (ctx) => {
     SHOP = ctx.params.key.toUpperCase();
