@@ -34,6 +34,7 @@ async function handleTokenRequest(ctx) {
     /** If there is no cache, build cache first */
     if (!cache) {
         let newToken = await refreshToken()
+        console.log('newToken', newToken)
         newToken.refresh_token = "*****"
         console.log('newToken', newToken)
         LocalDisk.writeFileSync(`/ecomm/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
