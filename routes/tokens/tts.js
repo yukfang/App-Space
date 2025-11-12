@@ -32,7 +32,7 @@ async function handleTokenRequest(ctx) {
         let newToken = await refreshToken()
         console.log('newToken', newToken)
         newToken.refresh_token = "*****"
-        console.log('newToken', newToken)
+        // console.log('newToken', newToken)
         LocalDisk.writeFileSync(`/tokens/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
         data = {
             access_token: newToken.access_token,
@@ -44,8 +44,8 @@ async function handleTokenRequest(ctx) {
         }
     } else {
         let cacheData = JSON.parse(cache.toString());
-        console.log(DateTime.now().toSeconds() - cacheData.access_token_expire_in)
-        if (!cacheData.access_token_expire_in || DateTime.now().toSeconds() + 3600 * 5 > cacheData.access_token_expire_in) {
+        console.log('Token will expire in ' + DateTime.now().toSeconds() - cacheData.access_token_expire_in)
+        if (!cacheData.access_token_expire_in || DateTime.now().toSeconds() + 3600 * 5000 > cacheData.access_token_expire_in) {
             console.log('cache expired')
             let newToken = await refreshToken()
             newToken.refresh_token = "*****"
