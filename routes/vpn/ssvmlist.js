@@ -10,9 +10,10 @@ const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const REMARKS = {
     "subs_yuning": "Dev环境",
-    "subs_luo": "罗总",
+    "subs_luo"   : "罗总",
     "subs_wangyi": "王益",
     "subs_lizong": "李总",
+    "subs_yumeng": "雨梦",
 }
 
 router.get('/:key', async (ctx) => {
@@ -21,9 +22,9 @@ router.get('/:key', async (ctx) => {
     console.log(`Req: key = ${key}`)
 
     /** Redirect If key matches */
-    if (key.toUpperCase() === 'YUNING')     { ctx.redirect('/ssvmlist/SUBS_YUNING') }
-    else if (key.toUpperCase() === 'LIYAN') { ctx.redirect('/ssvmlist/SUBS_LIYAN') }
-    else if (key.toUpperCase() === 'ZGW')   { ctx.redirect('/ssvmlist/SUBS_ZGW') }
+    if      (key.toUpperCase() === 'YUNING')    { ctx.redirect('/ssvmlist/SUBS_YUNING') }
+    else if (key.toUpperCase() === 'LIYAN')     { ctx.redirect('/ssvmlist/SUBS_LIYAN') }
+    else if (key.toUpperCase() === 'ZGW')       { ctx.redirect('/ssvmlist/SUBS_ZGW') }
 
     else if (key.toUpperCase() === 'MY_LIVE')   { ctx.redirect('/ssvmlist/SUBS_MY_LIVE') }
     else if (key.toUpperCase() === 'LUO')       { ctx.redirect('/ssvmlist/SUBS_LUO') }
