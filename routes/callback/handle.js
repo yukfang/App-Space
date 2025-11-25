@@ -17,13 +17,16 @@ router.get('/:path*', async (ctx) => {
         const queryParams = ctx.query;
 
         // 读取具体的查询参数
-        const app_key = queryParams.app_key || '';
         const grant_type = 'authorized_code';
-        const auth_code = queryParams.code || '';
-
-        const locale = queryParams.locale || '';
-        const shop_region = queryParams.shop_region || '';
-
+        const app_key = queryParams.app_key 
+        const auth_code = queryParams.code
+        const locale = queryParams.locale  
+        const shop_region = queryParams.shop_region 
+        if(app_key == undefined || auth_code == undefined || locale == undefined || shop_region == undefined){
+            ctx.status = 401;
+            ctx.body = { error: `Missing Parameters: app_key = ${app_key}, code = ${auth_code}, locale = ${locale}, shop_region = ${shop_region}` };
+            return
+        }
 
         if (pathSegments[0] === 'tt4s') {
             const result = await SendAccessTokenReq_TTS(app_key, grant_type, auth_code)
