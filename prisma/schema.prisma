@@ -1,7 +1,6 @@
 // db: 用来存 API Token
 datasource db {
   provider = "mysql"
-  //url      = env("OPENAPI_TTS_DB_URL")
 }
 
 

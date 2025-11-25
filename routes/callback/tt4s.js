@@ -1,6 +1,5 @@
 const axios = require('axios');
-const { PrismaClient } = require('../../prisma/generated/clientdb/index.js');
-const db = new PrismaClient()
+const prisma = require('../../utils/prisma-client'); 
 
 async function sendAccessTokenReq(app_key, grant_type, auth_code) {
     var authResult = {}
@@ -55,7 +54,7 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
             granted_scopes: authResult.data.granted_scopes.sort()
         }
 
-        await db.ApiCredential.create({
+        await prisma.ApiCredential.create({
             data: appCredential
         })
     } else {
@@ -72,7 +71,7 @@ module.exports = {
 }
 
 async function getAppInfo(app_key) {
-    const appInfo = await db.App.findUnique({
+    const appInfo = await prisma.App.findUnique({
         where: {
             app_key
         }
