@@ -54,15 +54,19 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
             granted_scopes: authResult.data.granted_scopes.sort()
         }
 
+
         await prisma.ApiCredential.create({
             data: appCredential
         })
+
+        appInfo.appCredential = appCredential
     } else {
         console.error("Auth Result Error...");
     }
 
     return {
-        redirect_url: `${appInfo.redirect_domain}${appInfo.success_path}`
+        redirect_url: `${appInfo.redirect_domain}${appInfo.success_path}`,
+        appCredential: appInfo.appCredential
     }
 }
 
@@ -78,13 +82,6 @@ async function getAppInfo(app_key) {
     })
 
     return appInfo
-
-
-    // if (app_key === '6h92uttbf7u18') {
-    //     return 'cebc73ea67bfed023fdf141d65c9efa1c5b6a446'
-    // } else {
-    //     return ''
-    // }
 }
 
 async function test() {
