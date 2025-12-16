@@ -70,6 +70,10 @@ async function sendAccessTokenReq(app_key, grant_type, auth_code) {
     }
 }
 
+async function getAuthorizedShop() {
+    
+}
+
 module.exports = {
     SendAccessTokenReq_TTS: sendAccessTokenReq
 }
