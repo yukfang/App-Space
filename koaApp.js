@@ -6,7 +6,8 @@ const ipRouter = require('./routes/ip/myip');
 const routeTokensTTS = require('./routes/tokens/tts');
 const callbackRouter = require('./routes/callback/handle');
 const fileDownloadRouter = require('./routes/file/download');
-const proxyRouter = require('./routes/proxy/index');
+const proxyRouter = require('./routes/proxy/index')
+const webhookRouter = require('./routes/webhook/index')
 const loginRouter = require('./routes/login/index')
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config();
@@ -64,6 +65,7 @@ koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
 }))
 koaApp.use(proxyRouter.routes()).use(proxyRouter.allowedMethods())
 koaApp.use(loginRouter.routes()).use(loginRouter.allowedMethods())
+koaApp.use(webhookRouter.routes()).use(webhookRouter.allowedMethods())
 
 
 
