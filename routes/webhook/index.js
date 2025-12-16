@@ -20,7 +20,7 @@ const pool = mysql.createPool(mysqlconfig);
 
 router.all('/tts/:shop_id', async (ctx) => {
     // console.log(`ctx.params: ${JSON.stringify(ctx.params)}`)
-    console.log(`ctx.request.body: ${JSON.stringify(ctx.request.body)}`)
+    // console.log(`ctx.request.body: ${JSON.stringify(ctx.request.body)}`)
     const shop_id = ctx.params.shop_id?.toLowerCase();
 
     if (shop_id == undefined) {
@@ -52,8 +52,8 @@ router.all('/tts/:shop_id', async (ctx) => {
         //     timestamp: 1644412885,
         //     data: { "order_id": "576486316948490001", "order_status": "UNPAID", "is_on_hold_order": false, "update_time": 1644412885 }
         // }
-        console.log(`payload received:`)
-        console.log(payload);
+        // console.log(`payload received:`)
+        // console.log(payload);
 
         const values = [
             payload.tts_notification_id,
