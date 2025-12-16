@@ -19,7 +19,8 @@ const mysqlconfig = {
 const pool = mysql.createPool(mysqlconfig);
 
 router.all('/tts/:shop_id', async (ctx) => {
-    console.log(`ctx.params: ${JSON.stringify(ctx.params)}`)
+    // console.log(`ctx.params: ${JSON.stringify(ctx.params)}`)
+    console.log(`ctx.request.body: ${JSON.stringify(ctx.request.body)}`)
     const shop_id = ctx.params.shop_id?.toLowerCase();
 
     if (shop_id == undefined) {
