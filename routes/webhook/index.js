@@ -67,12 +67,6 @@ router.all('/tts/:shop_id', async (ctx) => {
         const query = `INSERT INTO ${table_name} (tts_notification_id, type, shop_id, timestamp, data) VALUES (?, ?, ?, ?, ?)`;
         const [rows] = await pool.query(query, values);
 
-
-        // const [rows] = await pool.query(
-        //     `SELECT * FROM ${table_name} `,
-        //     [1]
-        // );
-
         console.log(rows);
     }
 });
