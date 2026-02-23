@@ -60,7 +60,7 @@ router.get('/:key', async (ctx) => {
             vmlist.push(process.env[value] || process.env[value.replaceAll(".", "_")])
         }
         console.log(vmlist);
-        const instances = vmlist.sort((a,b) => a.localeCompare(b).join("\r\n");
+        const instances = vmlist.sort((a,b) => a.localeCompare(b)).join("\r\n");
         const data = Buffer.from(remarks + "\r\n" + instances).toString('base64');
         ctx.body = data;
     } else {
