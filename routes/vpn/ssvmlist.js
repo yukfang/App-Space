@@ -66,12 +66,12 @@ router.get('/:key', async (ctx) => {
         }
         console.log(vmlist);
         const instances = vmlist.sort((a,b) => {
-            const tag_a = a.split('#')[1]
-            const tag_b = b.split('#')[1]
+            const tag_a = a.split('#')[1] || ''
+            const tag_b = b.split('#')[1] || ''
 
             return tag_a.localeCompare(tag_b)
-        })
-                                .join("\r\n");
+        }).join("\r\n");
+        
         const data = Buffer.from(remarks + "\r\n" + instances).toString('base64');
         ctx.body = data;
     } else {
