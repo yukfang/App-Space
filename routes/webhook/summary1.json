@@ -1,0 +1,182 @@
+{
+    "code": 0,
+    "data": {
+        "formatted_summary": {
+            "has_repeat": {
+                "total": {
+                    "label_key": "staff_rsu_granted",
+                    "label": {
+                        "zh": "总授予",
+                        "en": "Granted"
+                    },
+                    "value": "1010",
+                    "description": {
+                        "zh": "总授予 = 已归属股数 + 待归属股数 + 已取消股数",
+                        "en": "Granted = Time-Vested + Time-Unvested + Cancelled"
+                    },
+                    "percent": "",
+                    "children": []
+                },
+                "vested": {
+                    "label_key": "staff_opt_time_vested",
+                    "label": {
+                        "zh": "已归属",
+                        "en": "Time-Vested"
+                    },
+                    "value": "596",
+                    "description": {
+                        "zh": "已归属，且未取消的数量",
+                        "en": "Time-vested and not cancelled"
+                    },
+                    "percent": "59.01",
+                    "children": [
+                        {
+                            "label_key": "staff_cashed_out",
+                            "label": {
+                                "zh": "已回购",
+                                "en": "Cashed-Out"
+                            },
+                            "value": "72",
+                            "description": {
+                                "zh": "已回购的数量",
+                                "en": "The number of cashed-out"
+                            },
+                            "percent": "12.08",
+                            "children": []
+                        },
+                        {
+                            "label_key": "staff_remaining_time_vested",
+                            "label": {
+                                "zh": "剩余已归属",
+                                "en": "Remaining Time-Vested"
+                            },
+                            "value": "524",
+                            "description": {
+                                "zh": "剩余已归属 = 已归属 - 已回购",
+                                "en": "Remaining Time-Vested = Time-Vested - Cashed-out"
+                            },
+                            "percent": "87.92",
+                            "children": []
+                        }
+                    ]
+                },
+                "unvested": {
+                    "label_key": "staff_rsu_time_unvested",
+                    "label": {
+                        "zh": "待归属",
+                        "en": "Time-Unvested"
+                    },
+                    "value": "414",
+                    "description": {
+                        "zh": "未归属，且未取消的数量",
+                        "en": "Time-unvested and not cancelled"
+                    },
+                    "percent": "40.99",
+                    "children": []
+                },
+                "canceled": {
+                    "label_key": "staff_cancelled",
+                    "label": {
+                        "zh": "已取消",
+                        "en": "Cancelled"
+                    },
+                    "value": "0",
+                    "description": {
+                        "zh": "因离职、跨境变更激励工具（例如取消期权，重新授予RSU）等原因导致取消的数量",
+                        "en": "Cancelled due to reasons such as termination, cross-border changing incentive vehicles (for example, cancelled RSUs and re-granted options)"
+                    },
+                    "percent": "0.00",
+                    "children": []
+                }
+            },
+            "no_repeat": {
+                "total": {
+                    "label_key": "staff_rsu_granted",
+                    "label": {
+                        "zh": "总授予",
+                        "en": "Granted"
+                    },
+                    "value": "3030",
+                    "description": {
+                        "zh": "总授予 = 已归属股数 + 待归属股数 + 已取消股数",
+                        "en": "Granted = Time-Vested + Time-Unvested + Cancelled"
+                    },
+                    "percent": "",
+                    "children": []
+                },
+                "vested": {
+                    "label_key": "staff_opt_time_vested",
+                    "label": {
+                        "zh": "已归属",
+                        "en": "Time-Vested"
+                    },
+                    "value": "596",
+                    "description": {
+                        "zh": "已归属，且未取消的数量",
+                        "en": "Time-vested and not cancelled"
+                    },
+                    "percent": "59.01",
+                    "children": [
+                        {
+                            "label_key": "staff_cashed_out",
+                            "label": {
+                                "zh": "已回购",
+                                "en": "Cashed-Out"
+                            },
+                            "value": "72",
+                            "description": {
+                                "zh": "已回购的数量",
+                                "en": "The number of cashed-out"
+                            },
+                            "percent": "12.08",
+                            "children": []
+                        },
+                        {
+                            "label_key": "staff_remaining_time_vested",
+                            "label": {
+                                "zh": "剩余已归属",
+                                "en": "Remaining Time-Vested"
+                            },
+                            "value": "524",
+                            "description": {
+                                "zh": "剩余已归属 = 已归属 - 已回购",
+                                "en": "Remaining Time-Vested = Time-Vested - Cashed-out"
+                            },
+                            "percent": "87.92",
+                            "children": []
+                        }
+                    ]
+                },
+                "unvested": {
+                    "label_key": "staff_rsu_time_unvested",
+                    "label": {
+                        "zh": "待归属",
+                        "en": "Time-Unvested"
+                    },
+                    "value": "414",
+                    "description": {
+                        "zh": "未归属，且未取消的数量",
+                        "en": "Time-unvested and not cancelled"
+                    },
+                    "percent": "40.99",
+                    "children": []
+                },
+                "canceled": {
+                    "label_key": "staff_cancelled",
+                    "label": {
+                        "zh": "已取消",
+                        "en": "Cancelled"
+                    },
+                    "value": "0",
+                    "description": {
+                        "zh": "因离职等原因导致取消的数量",
+                        "en": "Cancelled due to reasons such as termination"
+                    },
+                    "percent": "0.00",
+                    "children": []
+                }
+            }
+        },
+        "has_repeat_grant": false
+    }
+}

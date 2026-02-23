@@ -24,7 +24,6 @@ router.get('/:key', async (ctx) => {
     if      (key.toUpperCase() === 'YUNING')    { ctx.redirect('/ssvmlist/SUBS_YUNING') }
     else if (key.toUpperCase() === 'LIYAN')     { ctx.redirect('/ssvmlist/SUBS_LIYAN') }
     else if (key.toUpperCase() === 'ZGW')       { ctx.redirect('/ssvmlist/SUBS_ZGW') }
-
     else if (key.toUpperCase() === 'MY_LIVE')   { ctx.redirect('/ssvmlist/SUBS_MY_LIVE') }
     else if (key.toUpperCase() === 'LUO')       { ctx.redirect('/ssvmlist/SUBS_LUO') }
     else if (key.toUpperCase() === 'MY_XIN')    { ctx.redirect('/ssvmlist/SUBS_XIN') }
@@ -61,7 +60,7 @@ router.get('/:key', async (ctx) => {
             vmlist.push(process.env[value] || process.env[value.replaceAll(".", "_")])
         }
         console.log(vmlist);
-        const instances = vmlist.join("\r\n");
+        const instances = vmlist.sort((a,b) => a.localeCompare(b).join("\r\n");
         const data = Buffer.from(remarks + "\r\n" + instances).toString('base64');
         ctx.body = data;
     } else {
