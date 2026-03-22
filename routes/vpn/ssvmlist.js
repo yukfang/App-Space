@@ -57,9 +57,6 @@ router.get('/:key', async (ctx) => {
     if (values) {
         const remarks = `REMARKS=${REMARKS[key.toLowerCase()] || (key + '_')}`;
 
-
-//vless://49b3d453-09d8-4a5d-b8bc-1e4638030994@yuning.us.aether-bloom.com:50066?type=grpc&encryption=none&serviceName=GetPrice&authority=&security=tls&fp=chrome&alpn=h2%2Chttp%2F1.1&sni=yuning.us.aether-bloom.com#%5B%5EUS%5D-001
-
         const vmlist = []
         for (const value of values) {
             vmlist.push(process.env[value] || process.env[value.replaceAll(".", "_")])
