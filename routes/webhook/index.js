@@ -4,6 +4,9 @@ const router = new Router({ prefix: '/webhook' });
 
 const dbconfig = JSON.parse(process.env.WEBHOOK_DB_CFG)
 
+const seller_ids = [
+    '123'
+]
 
 // ✅ 全局唯一 pool（进程启动时创建）
 const mysqlconfig = {
