@@ -45,14 +45,13 @@ async function handleCallback(ctx) {
             'https://accounts.snapchat.com/login/oauth2/access_token',
             new URLSearchParams({
                 grant_type: 'authorization_code',
-                client_id: client_id,
-                client_secret: client_secret,
                 code: code,
                 redirect_uri: redirect_uri
             }),
             {
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64')
                 }
             }
         );
