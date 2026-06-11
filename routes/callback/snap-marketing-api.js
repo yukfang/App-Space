@@ -39,20 +39,25 @@ async function handleCallback(ctx) {
             return;
         }
 
-        const { client_id, client_secret, redirect_uri } = appInfo;
+        const client_id = String(appInfo.client_id || '').trim();
+        const client_secret = String(appInfo.client_secret || '').trim();
+        const redirect_uri = String(appInfo.redirect_uri || '').trim();
+
+        const tokenBody = new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            client_id,
+            client_secret,
+            redirect_uri,
+        });
 
         const response = await axios.post(
             'https://accounts.snapchat.com/login/oauth2/access_token',
-            new URLSearchParams({
-                grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: redirect_uri
-            }),
+            tokenBody,
             {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64')
-                }
+                },
             }
         );
 
@@ -68,11 +73,16 @@ async function handleCallback(ctx) {
             client_id: client_id
         };
     } catch (error) {
-        console.error('OAuth callback error:', error.message);
+        console.error('Snap OAuth callback error:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            request_url: error.config?.url,
+        });
         ctx.status = 500;
-        ctx.body = { 
+        ctx.body = {
             error: error.message,
-            detail: error.response?.data || error.stack 
+            detail: error.response?.data || error.stack,
         };
     }
 }
