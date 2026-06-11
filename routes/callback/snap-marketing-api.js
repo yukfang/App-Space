@@ -13,120 +13,47 @@ const pool = mysql.createPool({
 });
 
 async function handleCallback(ctx) {
-    const logSteps = [];
-    let step = 0;
-
     try {
         const path = ctx.path;
         const code = ctx.query.code;
 
-        // Step 1: 提取 app_key
-        step++;
         const appKeyMatch = path.match(/snapchat-marketing-api-([^/?]+)/);
         const app_key = appKeyMatch ? appKeyMatch[1] : null;
-        logSteps.push({
-            step: step,
-            name: '提取 app_key',
-            path: path,
-            app_key: app_key,
-            code: code,
-            success: app_key !== null && code !== undefined
-        });
-        console.log(JSON.stringify({
-            step,
-            name: '提取 app_key',
-            path,
-            app_key,
-            code,
-            success: app_key !== null && code !== undefined
-        }));
 
         if (!code) {
             ctx.status = 400;
-            ctx.body = { 
-                error: 'Missing code parameter',
-                steps: logSteps
-            };
+            ctx.body = { error: 'Missing code parameter' };
             return;
         }
 
         if (!app_key) {
             ctx.status = 400;
-            ctx.body = { 
-                error: 'Invalid callback URL format',
-                steps: logSteps
-            };
+            ctx.body = { error: 'Invalid callback URL format' };
             return;
         }
 
-        // Step 2: 查询数据库获取 app 信息
-        step++;
         const appInfo = await getAppInfo(app_key);
-        logSteps.push({
-            step: step,
-            name: '查询数据库',
-            app_key: app_key,
-            appInfo: appInfo,
-            success: appInfo !== null
-        });
-        console.log(JSON.stringify({
-            step,
-            name: '查询数据库',
-            app_key,
-            appInfo,
-            success: appInfo !== null
-        }));
-
         if (!appInfo) {
             ctx.status = 404;
-            ctx.body = { 
-                error: 'App info not found',
-                steps: logSteps
-            };
+            ctx.body = { error: 'App info not found' };
             return;
         }
 
         const { client_id, client_secret, redirect_uri } = appInfo;
 
-        // 去除空白字符（数据库中可能存在的换行符、空格等）
         const cleanClientId = client_id.trim();
         const cleanClientSecret = client_secret.trim();
         const cleanRedirectUri = redirect_uri.trim();
 
-        // Step 3: 调用 Snapchat OAuth API 获取 access_token
-        step++;
-        const authUrl = 'https://accounts.snapchat.com/login/oauth2/access_token';
-        const requestData = {
-            grant_type: 'authorization_code',
-            client_id: cleanClientId,
-            client_secret: cleanClientSecret,
-            code: code,
-            redirect_uri: cleanRedirectUri
-        };
-        
-        logSteps.push({
-            step: step,
-            name: '调用 OAuth API',
-            url: authUrl,
-            requestData: requestData,
-            client_id: cleanClientId,
-            client_secret_masked: cleanClientSecret ? '***' + cleanClientSecret.slice(-4) : null,
-            redirect_uri: cleanRedirectUri,
-            status: 'sending'
-        });
-        console.log(JSON.stringify({
-            step,
-            name: '调用 OAuth API',
-            url: authUrl,
-            client_id: cleanClientId,
-            code,
-            redirect_uri: cleanRedirectUri,
-            status: 'sending'
-        }));
-
         const response = await axios.post(
-            authUrl,
-            new URLSearchParams(requestData),
+            'https://accounts.snapchat.com/login/oauth2/access_token',
+            new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: cleanClientId,
+                client_secret: cleanClientSecret,
+                code: code,
+                redirect_uri: cleanRedirectUri
+            }),
             {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -135,64 +62,46 @@ async function handleCallback(ctx) {
         );
 
         const authResult = response.data;
-        logSteps[step-1].status = 'success';
-        logSteps[step-1].response = authResult;
-        console.log(JSON.stringify({
-            step,
-            name: 'OAuth API 响应',
-            response: authResult,
-            status: 'success'
-        }));
+        const access_token = authResult.access_token;
 
-        // Step 4: 保存凭证到数据库
-        step++;
-        await saveCredential(client_id, authResult);
-        logSteps.push({
-            step: step,
-            name: '保存凭证',
-            client_id: client_id,
-            saved_fields: Object.keys(authResult),
-            success: true
-        });
-        console.log(JSON.stringify({
-            step,
-            name: '保存凭证',
-            client_id,
-            saved_fields: Object.keys(authResult),
-            success: true
-        }));
+        // 调用 /v1/me 获取用户信息
+        let userInfo = {};
+        try {
+            const meResponse = await axios.get(
+                'https://adsapi.snapchat.com/v1/me',
+                {
+                    headers: {
+                        'Authorization': `Bearer ${access_token}`
+                    }
+                }
+            );
+            const me = meResponse.data.me;
+            if (me) {
+                userInfo = {
+                    email: me.email,
+                    display_name: me.display_name,
+                    snapchat_username: me.snapchat_username
+                };
+            }
+        } catch (meError) {
+            // 如果获取用户信息失败，继续保存凭证，不影响主流程
+        }
+
+        await saveCredential(cleanClientId, authResult, userInfo);
 
         ctx.status = 200;
         ctx.body = { 
             status: 'success',
             message: 'Authorization completed',
             app_key: app_key,
-            client_id: client_id,
-            steps: logSteps,
-            result: authResult
+            client_id: cleanClientId
         };
 
     } catch (error) {
-        console.error(JSON.stringify({
-            step,
-            name: '错误',
-            error: error.message,
-            response_status: error.response?.status,
-            response_data: error.response?.data
-        }));
-        
-        // 更新当前步骤的状态为失败
-        if (logSteps[step-1]) {
-            logSteps[step-1].status = 'error';
-            logSteps[step-1].error = error.message;
-            logSteps[step-1].response = error.response?.data;
-        }
-
         ctx.status = 500;
         ctx.body = { 
             error: error.message,
-            detail: error.response?.data || error.stack,
-            steps: logSteps
+            detail: error.response?.data || error.stack
         };
     }
 }
@@ -205,7 +114,7 @@ async function getAppInfo(app_key) {
     return rows[0] || null;
 }
 
-async function saveCredential(client_id, authResult) {
+async function saveCredential(client_id, authResult, userInfo = {}) {
     const { 
         access_token, 
         token_type, 
@@ -218,11 +127,14 @@ async function saveCredential(client_id, authResult) {
     
     const token_responses = JSON.stringify(authResult);
     
+    // 构造 description 字段
+    const description = JSON.stringify(userInfo);
+    
     await pool.query(
         `INSERT INTO snapchat_credentials 
             (client_id, access_token, token_type, expires_in, refresh_token, 
-             scope, id_token, issued_token_type, token_responses, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
+             scope, id_token, issued_token_type, token_responses, description, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
          ON DUPLICATE KEY UPDATE 
             access_token = VALUES(access_token),
             token_type = VALUES(token_type),
@@ -232,9 +144,10 @@ async function saveCredential(client_id, authResult) {
             id_token = VALUES(id_token),
             issued_token_type = VALUES(issued_token_type),
             token_responses = VALUES(token_responses),
+            description = VALUES(description),
             updated_at = NOW(3)`,
         [client_id, access_token, token_type, expires_in, refresh_token, 
-         scope, id_token, issued_token_type, token_responses]
+         scope, id_token, issued_token_type, token_responses, description]
     );
 }
 
