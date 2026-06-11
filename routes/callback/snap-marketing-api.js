@@ -13,76 +13,147 @@ const pool = mysql.createPool({
 });
 
 async function handleCallback(ctx) {
-    const path = ctx.path;
-    const code = ctx.query.code;
-
-    if (!code) {
-        ctx.status = 400;
-        ctx.body = { error: 'Missing code parameter' };
-        return;
-    }
-
-    const appKeyMatch = path.match(/snapchat-marketing-api-([^/?]+)/);
-    if (!appKeyMatch) {
-        ctx.status = 400;
-        ctx.body = { error: 'Invalid callback URL format' };
-        return;
-    }
-
-    const app_key = appKeyMatch[1];
+    const logSteps = [];
+    let step = 0;
 
     try {
-        const appInfo = await getAppInfo(app_key);
-        if (!appInfo) {
-            ctx.status = 404;
-            ctx.body = { error: 'App info not found' };
+        const path = ctx.path;
+        const code = ctx.query.code;
+
+        // Step 1: 提取 app_key
+        step++;
+        const appKeyMatch = path.match(/snapchat-marketing-api-([^/?]+)/);
+        const app_key = appKeyMatch ? appKeyMatch[1] : null;
+        logSteps.push({
+            step: step,
+            name: '提取 app_key',
+            path: path,
+            app_key: app_key,
+            code: code,
+            success: app_key !== null && code !== undefined
+        });
+        console.log(`[Step ${step}] 提取 app_key: path=${path}, app_key=${app_key}, code=${code}`);
+
+        if (!code) {
+            ctx.status = 400;
+            ctx.body = { 
+                error: 'Missing code parameter',
+                steps: logSteps
+            };
             return;
         }
 
-        const client_id = String(appInfo.client_id || '').trim();
-        const client_secret = String(appInfo.client_secret || '').trim();
-        const redirect_uri = String(appInfo.redirect_uri || '').trim();
+        if (!app_key) {
+            ctx.status = 400;
+            ctx.body = { 
+                error: 'Invalid callback URL format',
+                steps: logSteps
+            };
+            return;
+        }
 
-        const tokenBody = new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            client_id,
-            client_secret,
-            redirect_uri,
+        // Step 2: 查询数据库获取 app 信息
+        step++;
+        const appInfo = await getAppInfo(app_key);
+        logSteps.push({
+            step: step,
+            name: '查询数据库',
+            app_key: app_key,
+            appInfo: appInfo,
+            success: appInfo !== null
         });
+        console.log(`[Step ${step}] 查询数据库: app_key=${app_key}, appInfo=${JSON.stringify(appInfo)}`);
+
+        if (!appInfo) {
+            ctx.status = 404;
+            ctx.body = { 
+                error: 'App info not found',
+                steps: logSteps
+            };
+            return;
+        }
+
+        const { client_id, client_secret, redirect_uri } = appInfo;
+
+        // Step 3: 调用 Snapchat OAuth API 获取 access_token
+        step++;
+        const authUrl = 'https://accounts.snapchat.com/login/oauth2/access_token';
+        const requestData = {
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: redirect_uri
+        };
+        const authHeader = 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64');
+        
+        logSteps.push({
+            step: step,
+            name: '调用 OAuth API',
+            url: authUrl,
+            requestData: requestData,
+            client_id: client_id,
+            client_secret_masked: client_secret ? '***' + client_secret.slice(-4) : null,
+            redirect_uri: redirect_uri,
+            status: 'sending'
+        });
+        console.log(`[Step ${step}] 调用 OAuth API: url=${authUrl}, client_id=${client_id}, code=${code}`);
 
         const response = await axios.post(
-            'https://accounts.snapchat.com/login/oauth2/access_token',
-            tokenBody,
+            authUrl,
+            new URLSearchParams(requestData),
             {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                    'Authorization': authHeader
+                }
             }
         );
 
         const authResult = response.data;
+        logSteps[step-1].status = 'success';
+        logSteps[step-1].response = authResult;
+        console.log(`[Step ${step}] OAuth API 响应: ${JSON.stringify(authResult)}`);
 
+        // Step 4: 保存凭证到数据库
+        step++;
         await saveCredential(client_id, authResult);
+        logSteps.push({
+            step: step,
+            name: '保存凭证',
+            client_id: client_id,
+            saved_fields: Object.keys(authResult),
+            success: true
+        });
+        console.log(`[Step ${step}] 保存凭证: client_id=${client_id}, fields=${Object.keys(authResult).join(',')}`);
 
         ctx.status = 200;
         ctx.body = { 
             status: 'success',
             message: 'Authorization completed',
             app_key: app_key,
-            client_id: client_id
+            client_id: client_id,
+            steps: logSteps,
+            result: authResult
         };
+
     } catch (error) {
-        console.error('Snap OAuth callback error:', {
-            message: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            request_url: error.config?.url,
-        });
+        console.error(`[Step ${step}] 错误:`, error.message);
+        if (error.response) {
+            console.error(`  响应状态: ${error.response.status}`);
+            console.error(`  响应数据: ${JSON.stringify(error.response.data)}`);
+        }
+        
+        // 更新当前步骤的状态为失败
+        if (logSteps[step-1]) {
+            logSteps[step-1].status = 'error';
+            logSteps[step-1].error = error.message;
+            logSteps[step-1].response = error.response?.data;
+        }
+
         ctx.status = 500;
-        ctx.body = {
+        ctx.body = { 
             error: error.message,
             detail: error.response?.data || error.stack,
+            steps: logSteps
         };
     }
 }
