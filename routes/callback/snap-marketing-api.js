@@ -88,33 +88,39 @@ async function handleCallback(ctx) {
 
         const { client_id, client_secret, redirect_uri } = appInfo;
 
+        // 去除空白字符（数据库中可能存在的换行符、空格等）
+        const cleanClientId = client_id.trim();
+        const cleanClientSecret = client_secret.trim();
+        const cleanRedirectUri = redirect_uri.trim();
+
         // Step 3: 调用 Snapchat OAuth API 获取 access_token
         step++;
         const authUrl = 'https://accounts.snapchat.com/login/oauth2/access_token';
         const requestData = {
             grant_type: 'authorization_code',
+            client_id: cleanClientId,
+            client_secret: cleanClientSecret,
             code: code,
-            redirect_uri: redirect_uri
+            redirect_uri: cleanRedirectUri
         };
-        const authHeader = 'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64');
         
         logSteps.push({
             step: step,
             name: '调用 OAuth API',
             url: authUrl,
             requestData: requestData,
-            client_id: client_id,
-            client_secret_masked: client_secret ? '***' + client_secret.slice(-4) : null,
-            redirect_uri: redirect_uri,
+            client_id: cleanClientId,
+            client_secret_masked: cleanClientSecret ? '***' + cleanClientSecret.slice(-4) : null,
+            redirect_uri: cleanRedirectUri,
             status: 'sending'
         });
         console.log(JSON.stringify({
             step,
             name: '调用 OAuth API',
             url: authUrl,
-            client_id,
+            client_id: cleanClientId,
             code,
-            redirect_uri,
+            redirect_uri: cleanRedirectUri,
             status: 'sending'
         }));
 
@@ -123,8 +129,7 @@ async function handleCallback(ctx) {
             new URLSearchParams(requestData),
             {
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': authHeader
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
             }
         );
