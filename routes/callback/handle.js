@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const { SendAccessTokenReq_TTS } = require('./tt4s');
+const { handleCallback: handleSnapchatCallback } = require('./snap-marketing-api');
 const router = new Router({ prefix: '/callback' });
 
 router.get('/:path*', async (ctx) => {
@@ -11,6 +12,12 @@ router.get('/:path*', async (ctx) => {
         return
     } else {
         const pathSegments = fullPath.split('/') // 可选：将路径分割成段数组
+
+        // 检查是否是 Snapchat Marketing API 回调
+        if (pathSegments[0]?.startsWith('snapchat-marketing-api-')) {
+            await handleSnapchatCallback(ctx);
+            return;
+        }
 
         // 从HTTP请求中读取查询字符串参数
         // 例如：/?app_key=6h92uttbf7u18&code=&locale=en&shop_region=MY
