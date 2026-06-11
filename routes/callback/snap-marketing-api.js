@@ -32,7 +32,14 @@ async function handleCallback(ctx) {
             code: code,
             success: app_key !== null && code !== undefined
         });
-        console.log(`[Step ${step}] 提取 app_key: path=${path}, app_key=${app_key}, code=${code}`);
+        console.log(JSON.stringify({
+            step,
+            name: '提取 app_key',
+            path,
+            app_key,
+            code,
+            success: app_key !== null && code !== undefined
+        }));
 
         if (!code) {
             ctx.status = 400;
@@ -62,7 +69,13 @@ async function handleCallback(ctx) {
             appInfo: appInfo,
             success: appInfo !== null
         });
-        console.log(`[Step ${step}] 查询数据库: app_key=${app_key}, appInfo=${JSON.stringify(appInfo)}`);
+        console.log(JSON.stringify({
+            step,
+            name: '查询数据库',
+            app_key,
+            appInfo,
+            success: appInfo !== null
+        }));
 
         if (!appInfo) {
             ctx.status = 404;
@@ -95,7 +108,15 @@ async function handleCallback(ctx) {
             redirect_uri: redirect_uri,
             status: 'sending'
         });
-        console.log(`[Step ${step}] 调用 OAuth API: url=${authUrl}, client_id=${client_id}, code=${code}`);
+        console.log(JSON.stringify({
+            step,
+            name: '调用 OAuth API',
+            url: authUrl,
+            client_id,
+            code,
+            redirect_uri,
+            status: 'sending'
+        }));
 
         const response = await axios.post(
             authUrl,
@@ -111,7 +132,12 @@ async function handleCallback(ctx) {
         const authResult = response.data;
         logSteps[step-1].status = 'success';
         logSteps[step-1].response = authResult;
-        console.log(`[Step ${step}] OAuth API 响应: ${JSON.stringify(authResult)}`);
+        console.log(JSON.stringify({
+            step,
+            name: 'OAuth API 响应',
+            response: authResult,
+            status: 'success'
+        }));
 
         // Step 4: 保存凭证到数据库
         step++;
@@ -123,7 +149,13 @@ async function handleCallback(ctx) {
             saved_fields: Object.keys(authResult),
             success: true
         });
-        console.log(`[Step ${step}] 保存凭证: client_id=${client_id}, fields=${Object.keys(authResult).join(',')}`);
+        console.log(JSON.stringify({
+            step,
+            name: '保存凭证',
+            client_id,
+            saved_fields: Object.keys(authResult),
+            success: true
+        }));
 
         ctx.status = 200;
         ctx.body = { 
@@ -136,11 +168,13 @@ async function handleCallback(ctx) {
         };
 
     } catch (error) {
-        console.error(`[Step ${step}] 错误:`, error.message);
-        if (error.response) {
-            console.error(`  响应状态: ${error.response.status}`);
-            console.error(`  响应数据: ${JSON.stringify(error.response.data)}`);
-        }
+        console.error(JSON.stringify({
+            step,
+            name: '错误',
+            error: error.message,
+            response_status: error.response?.status,
+            response_data: error.response?.data
+        }));
         
         // 更新当前步骤的状态为失败
         if (logSteps[step-1]) {
