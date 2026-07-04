@@ -24,9 +24,18 @@ router.get('/:key', async (ctx) => {
 });
 
 async function handleTokenRequest(ctx) {
+    /** read query param force_refresh; if true, refresh token */
+    let forceRefresh = ctx.query.force_refresh === 'true';
+    if (forceRefresh) {
+        let newToken = await refreshToken()
+        console.log('newToken', newToken)
+        newToken.refresh_token = "*****"
+        LocalDisk.writeFileSync(`/tokens/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
+    }
+
+
     let data = {}
     let cache = LocalDisk.readFileSync(`/tokens/${SHOP}`, 'tokens.json');
-
     /** If there is no cache, build cache first */
     if (!cache) {
         let newToken = await refreshToken()
