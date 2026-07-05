@@ -5,7 +5,6 @@ const aes256cbc = require('../../utils/aes-256-cbc');
 const { DateTime } = require('luxon');
 const {
     getTokenBundleByShopIdAndAppKey,
-    getTokenBundleBySlugAndAppKey,
     markTokenRefreshFailed,
 } = require('../../utils/tts-db');
 const { refreshAccessToken, syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
@@ -16,35 +15,20 @@ const ACCESS_TOKEN_REFRESH_BUFFER_SEC = 3600 * 6;
 
 const router = new Router({ prefix: `/tokens/tts` });
 
-/** Primary: GET /tokens/tts/:app_key?shop_id={tiktok_shop_id} */
-router.get('/:app_key', async (ctx) => {
-    const shop_id = ctx.query.shop_id;
-    if (!shop_id) {
-        ctx.status = 400;
-        ctx.body = { error: 'Missing required query parameter: shop_id' };
-        return;
-    }
-    await issueEncryptedToken(ctx, {
-        app_key: ctx.params.app_key,
-        shop_id: String(shop_id),
-        logLabel: `${shop_id}/${ctx.params.app_key}`,
-        loadBundle: () => getTokenBundleByShopIdAndAppKey(shop_id, ctx.params.app_key),
-    });
-});
-
-/** Legacy alias: GET /tokens/tts/:slug/:app_key (slug in tts_shop) */
-router.get('/:slug/:app_key', async (ctx) => {
-    const slug = ctx.params.slug.toUpperCase();
+/** GET /tokens/tts/:shop_id/:app_key — token for (shop, app) authorization */
+router.get('/:shop_id/:app_key', async (ctx) => {
+    const shop_id = String(ctx.params.shop_id);
     const app_key = ctx.params.app_key;
+    const logLabel = `${shop_id}/${app_key}`;
+
     await issueEncryptedToken(ctx, {
         app_key,
-        shop_id: null,
-        logLabel: `${slug}/${app_key}`,
-        loadBundle: () => getTokenBundleBySlugAndAppKey(slug, app_key),
+        logLabel,
+        loadBundle: () => getTokenBundleByShopIdAndAppKey(shop_id, app_key),
     });
 });
 
-async function issueEncryptedToken(ctx, { app_key, shop_id, logLabel, loadBundle }) {
+async function issueEncryptedToken(ctx, { app_key, logLabel, loadBundle }) {
     const forceRefresh = ctx.query.force_refresh === 'true';
 
     let bundle;

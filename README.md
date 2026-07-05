@@ -32,8 +32,7 @@
 - 授权与令牌
   - `GET /auth/tts/:app_key`：跳转 TikTok 授权页（`tts_app.auth_url` 为空则用默认 `https://auth.tiktok-shops.com/oauth/authorize`）；`?format=json` 仅返回授权 URL。
   - `GET /callback/tt4s?app_key=&code=&locale=&shop_region=`：换 token，写入 `tts_shop` / `tts_shop_app_token`，再调 Get Authorized Shops 同步店铺。
-  - `GET /tokens/tts/:app_key?shop_id={tiktok_shop_id}`：**推荐**，按 TikTok Shop ID + App 取加密凭证（含 `access_token`、`app_key`、`app_secret`、`shop_cipher`、`shop_id`）。
-  - `GET /tokens/tts/:slug/:app_key`：兼容旧用法（`tts_shop.slug` + app）。
+  - `GET /tokens/tts/:shop_id/:app_key`：获取「该 shop 对该 app 授权」的加密凭证（`access_token`、`app_key`、`app_secret`、`shop_cipher` 等）。可选 `?force_refresh=true`。
   - 成功/失败页域名：`tts_app.redirect_domain` 非空时使用；为空则用**当前请求的域名**（含 `X-Forwarded-*`，适配 Azure 反代）。仍无则回退 `APP_PUBLIC_URL`。
 - 反向代理
   - [routes/proxy/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/proxy/index.js)
@@ -92,7 +91,7 @@
 4) 快速 smoke 测试：
    - `GET /ip/test` 查看出口 IP
    - `GET /file/download/7511947983685271557/Product-Level Customer Report 2025 July.xlsx` 验证下载
-   - `GET /tokens/tts/PACSUN/{app_key}`（需已执行 `tts_schema.sql` 并完成 OAuth + slug/encrypt_key 配置）
+   - `GET /tokens/tts/7495465866332375408/{app_key}`（需 OAuth 完成且配置 `encrypt_key`）
    - `ALL /webhook/tts/{shop_id}` 提交含 `tts_notification_id/type/...` 的 JSON 验证入库
 
 ## 目录速览
