@@ -1,4 +1,4 @@
-const getOpenApiTtsPool = require('./openapi-tts-db-pool');
+const getApiAuthDbPool = require('./api-auth-db-pool');
 
 const UPSERT_SHOP_META_SQL = `
 INSERT INTO tts_shop (id, code, name, region, seller_type, cipher)
@@ -34,7 +34,7 @@ ON DUPLICATE KEY UPDATE
 `;
 
 async function getTtsApp(app_key) {
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     const [rows] = await pool.execute(
         `SELECT id, app_key, app_secret, redirect_domain, success_path, failure_path, description, auth_url
          FROM tts_app WHERE app_key = ? LIMIT 1`,
@@ -44,7 +44,7 @@ async function getTtsApp(app_key) {
 }
 
 async function getTokenBundleBySlugAndAppKey(slug, app_key) {
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     const [rows] = await pool.execute(
         `SELECT
            s.id AS shop_id, s.slug, s.encrypt_key, s.cipher AS shop_cipher,
@@ -66,7 +66,7 @@ async function upsertShopMetadata(shops) {
     if (!shops?.length) {
         return;
     }
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
@@ -110,7 +110,7 @@ async function upsertTokensForShops(shopIds, tokenRow) {
     if (!shopIds.length) {
         return;
     }
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
@@ -139,7 +139,7 @@ async function upsertTokensForShops(shopIds, tokenRow) {
 }
 
 async function markTokenRefreshFailed(shop_id, app_key) {
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     await pool.execute(
         `UPDATE tts_shop_app_token SET status = 'refresh_failed' WHERE shop_id = ? AND app_key = ?`,
         [String(shop_id), app_key]

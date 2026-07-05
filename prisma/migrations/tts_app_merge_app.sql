@@ -1,4 +1,4 @@
--- Align existing tts_app with legacy `app` table (OPENAPI_TTS_DB_URL2)
+-- Align existing tts_app with legacy `app` table (API_AUTH_DB)
 
 ALTER TABLE tts_app
     ADD COLUMN auth_url VARCHAR(256) DEFAULT '' AFTER description;

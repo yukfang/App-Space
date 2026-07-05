@@ -1,16 +1,17 @@
 const path = require('path');
 const mysql = require('mysql2/promise');
-const { connectionConfigFromUrl } = require('./openapi-tts-db-config');
+const { connectionConfigFromUrl } = require('./api-auth-db-config');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 let pool;
 
-function getOpenApiTtsPool() {
+/** Shared MySQL pool for API auth tables (tts_*, snap_*, …) via API_AUTH_DB. */
+function getApiAuthDbPool() {
     if (!pool) {
-        const connectionString = process.env.OPENAPI_TTS_DB_URL2;
+        const connectionString = process.env.API_AUTH_DB;
         if (!connectionString) {
-            throw new Error('OPENAPI_TTS_DB_URL2 is not set');
+            throw new Error('API_AUTH_DB is not set');
         }
         pool = mysql.createPool({
             ...connectionConfigFromUrl(connectionString),
@@ -22,4 +23,4 @@ function getOpenApiTtsPool() {
     return pool;
 }
 
-module.exports = getOpenApiTtsPool;
+module.exports = getApiAuthDbPool;

@@ -33,7 +33,7 @@
   - `GET /auth/tts/:app_key`：跳转 TikTok 授权页（`tts_app.auth_url` 为空则用默认 `https://auth.tiktok-shops.com/oauth/authorize`）；`?format=json` 仅返回授权 URL。
   - `GET /callback/tt4s?app_key=&code=&locale=&shop_region=`：换 token，写入 `tts_shop` / `tts_shop_app_token`，再调 Get Authorized Shops 同步店铺。
   - `GET /tokens/tts/:slug/:app_key`：按 slug + app 返回加密 access token 与 app 信息。
-  - 环境变量：`TTS_OAUTH_REDIRECT_URI`（或与 Partner Center 一致的回调地址）、`APP_PUBLIC_URL`（未设 redirect 时用于拼 `/callback/tt4s`）。
+  - 成功/失败页域名：`tts_app.redirect_domain` 非空时使用；为空则用**当前请求的域名**（含 `X-Forwarded-*`，适配 Azure 反代）。仍无则回退 `APP_PUBLIC_URL`。
 - 反向代理
   - [routes/proxy/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/proxy/index.js)
   - `ALL /proxy/webhook/pacsun(.*)` → `https://ads.tiktok.com/app_store/api/webhook/pacsun`
@@ -69,12 +69,12 @@
   - `PLATFORM`：若为 `FAAS`，导出 `handler/initializer` 以适配 FaaS
   - `DEBUG_FLAG`：为 `true` 时在部分接口返回调试信息
   - `STORAGE_PATH`：本地缓存目录（默认 `./local_data/`）
-- TikTok Shop 令牌
-  - `GET /tokens/tts/:slug/:app_key`：从 MySQL `tts_*` 表读取/刷新 Access Token，返回 AES 加密报文（不再使用 `SHOP_INFO_TTS_*` 与本地磁盘缓存）。
-  - 表：`tts_app`（应用）、`tts_shop`（店铺 + `slug` + `encrypt_key`）、`tts_shop_app_token`（(shop, app) 授权）。
-  - MySQL 连接：`OPENAPI_TTS_DB_URL2`（`tts_*` 表专用；建表脚本见 `prisma/migrations/tts_schema.sql`）。
-  - OAuth 回调 `/callback/tt4s` 写入 `tts_*` 表；授权后需为对应 TikTok `shop.id` 配置 `tts_shop.slug` 与 `encrypt_key`。
-  - 旧 env（可选迁移参考）：`SHOP_INFO_TTS_{SHOP}` 已废弃。
+- API 授权凭证库（mysql2）
+  - `API_AUTH_DB`：MySQL 连接串，存放各平台 OAuth 表（如 `tts_app`、`tts_shop`；后续可为 `snap_*`、`google_*` 等）。
+    - 示例：`API_AUTH_DB="mysql://user:pass@host:3306/api_auth?ssl=false"`
+    - 连接池：[utils/api-auth-db-pool.js](file:///Users/yukfang/yuk-fang-ws/App-Space/utils/api-auth-db-pool.js)
+- TikTok Shop（`tts_*` 表，库同上 `API_AUTH_DB`）
+  - 路由见上文「授权与令牌」；OAuth 写入 `tts_*`，需配置 `tts_shop.slug` / `encrypt_key`。
 - Webhook MySQL 连接（直连）
   - `WEBHOOK_DB_CFG`：JSON 字符串，示例：
     ```
@@ -86,7 +86,7 @@
 
 ## 本地运行与验证
 1) 安装依赖：`npm install`  
-2) 配置 `.env`（至少包含 `OPENAPI_TTS_DB_URL` 或 `WEBHOOK_DB_CFG` 中与所用路由相关的配置）  
+2) 配置 `.env`（TTS OAuth / Token 需 `API_AUTH_DB`；Prisma 旧表可选 `OPENAPI_TTS_DB_URL`；Webhook 用 `WEBHOOK_DB_CFG`）  
 3) 启动服务：`npm run start`  
 4) 快速 smoke 测试：
    - `GET /ip/test` 查看出口 IP
@@ -109,6 +109,6 @@
 
 ## 注意事项
 - 切勿提交任何真实密钥或数据库凭证到版本库。
-- 生产环境请为 `WEBHOOK_DB_CFG/OPENAPI_TTS_DB_URL` 等敏感配置使用安全的密钥管理与注入方案。
+- 生产环境请为 `API_AUTH_DB` / `WEBHOOK_DB_CFG` / `OPENAPI_TTS_DB_URL` 等敏感配置使用安全的密钥管理与注入方案。
 - 回调、令牌与 Webhook 路由依赖外部系统，建议在开发环境使用最小权限的测试凭证与数据库。
 

@@ -1,5 +1,5 @@
 -- TikTok Shop credentials (new tables; does not modify legacy app/shop/ApiCredential)
--- Run against the database in OPENAPI_TTS_DB_URL2
+-- Run against the database in API_AUTH_DB
 -- tts_app columns aligned with legacy `app` table (including auth_url)
 
 CREATE TABLE IF NOT EXISTS tts_app (

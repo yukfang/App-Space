@@ -1,19 +1,20 @@
 const Router = require('koa-router');
 const path = require('path');
 const { getTtsApp } = require('../../utils/tts-db');
-const getOpenApiTtsPool = require('../../utils/openapi-tts-db-pool');
+const getApiAuthDbPool = require('../../utils/api-auth-db-pool');
 const { renderSuccessPage, renderFailurePage } = require('../../utils/tts-oauth-result-page');
+const { getAppPublicUrl, getRequestOrigin } = require('../../utils/app-public-url');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const router = new Router();
 
 function authBaseUrl(ctx) {
-    const fromEnv = process.env.APP_PUBLIC_URL?.trim();
-    if (fromEnv) {
-        return fromEnv.replace(/\/$/, '');
+    const fromRequest = getRequestOrigin(ctx);
+    if (fromRequest) {
+        return fromRequest;
     }
-    return `${ctx.protocol}://${ctx.host}`;
+    return getAppPublicUrl();
 }
 
 function redirectToFailure(ctx, params) {
@@ -30,7 +31,7 @@ async function loadShopsByIds(shopIds) {
     if (!shopIds.length) {
         return [];
     }
-    const pool = getOpenApiTtsPool();
+    const pool = getApiAuthDbPool();
     const placeholders = shopIds.map(() => '?').join(',');
     const [rows] = await pool.query(
         `SELECT id, name, region FROM tts_shop WHERE id IN (${placeholders})`,

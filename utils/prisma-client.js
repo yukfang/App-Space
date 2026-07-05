@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const { PrismaClient } = require('../prisma/generated/clientdb');
 const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
-const { connectionConfigFromUrl } = require('./openapi-tts-db-config');
+const { connectionConfigFromUrl } = require('./api-auth-db-config');
 
 const connectionString = process.env.OPENAPI_TTS_DB_URL;
 if (!connectionString) {

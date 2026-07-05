@@ -2,8 +2,10 @@ const { exchangeAuthCode } = require('../../utils/tts-api');
 const { getTtsApp } = require('../../utils/tts-db');
 const { syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
 const { buildFailureParams } = require('../../utils/tts-oauth-error');
+const { oauthResultBaseUrl, joinPublicPath } = require('../../utils/app-public-url');
 
 async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext = {}) {
+    const currentOrigin = oauthContext.currentOrigin || '';
     if (auth_code === '123') {
         return {
             code: 0,
@@ -25,7 +27,7 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
             app_key,
             step: failure.step,
             detail: failure.detail,
-            failure_redirect: failureRedirectFromEnv(failure),
+            failure_redirect: failureRedirectFromOrigin(currentOrigin, failure),
         };
     }
 
@@ -46,7 +48,7 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
             app_key,
             step: failure.step,
             detail: failure.detail,
-            failure_redirect: buildOAuthResultUrl(appInfo, 'failure', failure),
+            failure_redirect: buildOAuthResultUrl(appInfo, 'failure', failure, currentOrigin),
         };
     }
 
@@ -78,8 +80,8 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
             step: failure.step,
             detail: failure.detail,
             failure_redirect: appInfo.failure_path
-                ? buildOAuthResultUrl(appInfo, 'failure', failure)
-                : failureRedirectFromEnv(failure),
+                ? buildOAuthResultUrl(appInfo, 'failure', failure, currentOrigin)
+                : failureRedirectFromOrigin(currentOrigin, failure),
         };
     }
 
@@ -88,13 +90,13 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
         redirect_url: buildOAuthResultUrl(appInfo, 'success', {
             app_key,
             shop_ids: shops.map((s) => String(s.id)).join(','),
-        }),
+        }, currentOrigin),
         appCredential: appInfo.appCredential,
     };
 }
 
-function failureRedirectFromEnv(params) {
-    const base = process.env.APP_PUBLIC_URL?.trim()?.replace(/\/$/, '');
+function failureRedirectFromOrigin(currentOrigin, params) {
+    const base = oauthResultBaseUrl({}, currentOrigin);
     if (!base) {
         return null;
     }
@@ -115,9 +117,9 @@ function appendSearchParams(url, params) {
     }
 }
 
-function buildOAuthResultUrl(appInfo, kind, params) {
+function buildOAuthResultUrl(appInfo, kind, params, currentOrigin) {
     const path = kind === 'success' ? appInfo.success_path : appInfo.failure_path;
-    const base = `${appInfo.redirect_domain}${path}`;
+    const base = joinPublicPath(oauthResultBaseUrl(appInfo, currentOrigin), path);
     try {
         const url = new URL(base);
         appendSearchParams(url, params);

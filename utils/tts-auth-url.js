@@ -1,5 +1,7 @@
 const DEFAULT_TTS_AUTHORIZE_URL = 'https://auth.tiktok-shops.com/oauth/authorize';
 
+const { getAppPublicUrl } = require('./app-public-url');
+
 /**
  * OAuth redirect_uri registered in TikTok Partner Center (must match callback route).
  */
@@ -8,9 +10,9 @@ function getOAuthRedirectUri() {
     if (explicit) {
         return explicit;
     }
-    const base = process.env.APP_PUBLIC_URL?.trim();
+    const base = getAppPublicUrl();
     if (base) {
-        return `${base.replace(/\/$/, '')}/callback/tt4s`;
+        return `${base}/callback/tt4s`;
     }
     return null;
 }

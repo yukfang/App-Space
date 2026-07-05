@@ -3,6 +3,7 @@ const { SendAccessTokenReq_TTS } = require('./tt4s');
 const { handleCallback: handleSnapchatCallback } = require('./snap-marketing-api');
 const { redirectToFailure } = require('../oauth/tts-result');
 const { buildFailureParams } = require('../../utils/tts-oauth-error');
+const { getRequestOrigin } = require('../../utils/app-public-url');
 const router = new Router({ prefix: '/callback' });
 
 router.get('/:path*', async (ctx) => {
@@ -45,11 +46,13 @@ router.get('/:path*', async (ctx) => {
         }
 
         if (pathSegments[0] === 'tt4s') {
+            const currentOrigin = getRequestOrigin(ctx);
             let result;
             try {
                 result = await SendAccessTokenReq_TTS(app_key, grant_type, auth_code, {
                     locale,
                     shop_region,
+                    currentOrigin,
                 });
             } catch (err) {
                 console.error('OAuth unhandled error:', err);
