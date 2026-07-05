@@ -43,15 +43,31 @@ async function getTtsApp(app_key) {
     return rows[0] ?? null;
 }
 
-async function getTokenBundleBySlugAndAppKey(slug, app_key) {
-    const pool = getApiAuthDbPool();
-    const [rows] = await pool.execute(
-        `SELECT
+const TOKEN_BUNDLE_SELECT = `
            s.id AS shop_id, s.slug, s.encrypt_key, s.cipher AS shop_cipher,
            s.code, s.name, s.region, s.is_active,
            t.id AS token_id, t.access_token, t.access_token_expire_in,
            t.refresh_token, t.refresh_token_expire_in, t.status AS token_status,
-           a.app_key, a.app_secret
+           a.app_key, a.app_secret`;
+
+async function getTokenBundleByShopIdAndAppKey(shop_id, app_key) {
+    const pool = getApiAuthDbPool();
+    const [rows] = await pool.execute(
+        `SELECT ${TOKEN_BUNDLE_SELECT}
+         FROM tts_shop s
+         INNER JOIN tts_shop_app_token t ON t.shop_id = s.id
+         INNER JOIN tts_app a ON a.app_key = t.app_key
+         WHERE s.id = ? AND t.app_key = ?
+         LIMIT 1`,
+        [String(shop_id), app_key]
+    );
+    return rows[0] ?? null;
+}
+
+async function getTokenBundleBySlugAndAppKey(slug, app_key) {
+    const pool = getApiAuthDbPool();
+    const [rows] = await pool.execute(
+        `SELECT ${TOKEN_BUNDLE_SELECT}
          FROM tts_shop s
          INNER JOIN tts_shop_app_token t ON t.shop_id = s.id
          INNER JOIN tts_app a ON a.app_key = t.app_key
@@ -148,6 +164,7 @@ async function markTokenRefreshFailed(shop_id, app_key) {
 
 module.exports = {
     getTtsApp,
+    getTokenBundleByShopIdAndAppKey,
     getTokenBundleBySlugAndAppKey,
     upsertShopMetadata,
     tokenRowFromOAuth,

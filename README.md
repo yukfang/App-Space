@@ -32,7 +32,8 @@
 - 授权与令牌
   - `GET /auth/tts/:app_key`：跳转 TikTok 授权页（`tts_app.auth_url` 为空则用默认 `https://auth.tiktok-shops.com/oauth/authorize`）；`?format=json` 仅返回授权 URL。
   - `GET /callback/tt4s?app_key=&code=&locale=&shop_region=`：换 token，写入 `tts_shop` / `tts_shop_app_token`，再调 Get Authorized Shops 同步店铺。
-  - `GET /tokens/tts/:slug/:app_key`：按 slug + app 返回加密 access token 与 app 信息。
+  - `GET /tokens/tts/:app_key?shop_id={tiktok_shop_id}`：**推荐**，按 TikTok Shop ID + App 取加密凭证（含 `access_token`、`app_key`、`app_secret`、`shop_cipher`、`shop_id`）。
+  - `GET /tokens/tts/:slug/:app_key`：兼容旧用法（`tts_shop.slug` + app）。
   - 成功/失败页域名：`tts_app.redirect_domain` 非空时使用；为空则用**当前请求的域名**（含 `X-Forwarded-*`，适配 Azure 反代）。仍无则回退 `APP_PUBLIC_URL`。
 - 反向代理
   - [routes/proxy/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/proxy/index.js)
