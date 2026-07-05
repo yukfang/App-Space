@@ -11,7 +11,7 @@ const { refreshAccessToken, syncShopMetadataAndTokens } = require('../../utils/t
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-const ACCESS_TOKEN_REFRESH_BUFFER_SEC = 3600 * 6;
+const ACCESS_TOKEN_REFRESH_BUFFER_SEC = 3600 * 25;
 
 const router = new Router({ prefix: `/tokens/tts` });
 
