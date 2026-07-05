@@ -29,14 +29,11 @@
 - Webhook
   - [routes/webhook/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/webhook/index.js)
   - `ALL /webhook/tts/:shop_id`：接收 TikTok Shop Webhook，读取请求体并插入 MySQL 表 `webhook_messages`（需事先建表）。
-- 授权回调
-  - [routes/callback/handle.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/callback/handle.js)
-  - `GET /callback/tt4s?...`：调用 TikTok Shops 获取 access_token，写入 Prisma 表后按应用配置重定向。
-  - 业务实现：[tt4s.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/callback/tt4s.js)
-- 令牌服务（TTS）
-  - [routes/tokens/tts.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/tokens/tts.js)
-  - `GET /tokens/tts/:key`：按店铺配置刷新/缓存 Access Token，返回加密报文；持久化于本地磁盘。
-  - 本地存储：[routes/storage/localdisk.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/storage/localdisk.js)
+- 授权与令牌
+  - `GET /auth/tts/:app_key`：跳转 TikTok 授权页（`tts_app.auth_url` 为空则用默认 `https://auth.tiktok-shops.com/oauth/authorize`）；`?format=json` 仅返回授权 URL。
+  - `GET /callback/tt4s?app_key=&code=&locale=&shop_region=`：换 token，写入 `tts_shop` / `tts_shop_app_token`，再调 Get Authorized Shops 同步店铺。
+  - `GET /tokens/tts/:slug/:app_key`：按 slug + app 返回加密 access token 与 app 信息。
+  - 环境变量：`TTS_OAUTH_REDIRECT_URI`（或与 Partner Center 一致的回调地址）、`APP_PUBLIC_URL`（未设 redirect 时用于拼 `/callback/tt4s`）。
 - 反向代理
   - [routes/proxy/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/proxy/index.js)
   - `ALL /proxy/webhook/pacsun(.*)` → `https://ads.tiktok.com/app_store/api/webhook/pacsun`
@@ -73,10 +70,11 @@
   - `DEBUG_FLAG`：为 `true` 时在部分接口返回调试信息
   - `STORAGE_PATH`：本地缓存目录（默认 `./local_data/`）
 - TikTok Shop 令牌
-  - `SHOP_INFO_TTS_{SHOP}`：JSON 字符串，示例：
-    ```
-    SHOP_INFO_TTS_PACSUN={"app_key":"...","app_secret":"...","shop_cipher":"...","refresh_token":"...","encrypt_key":"..."}
-    ```
+  - `GET /tokens/tts/:slug/:app_key`：从 MySQL `tts_*` 表读取/刷新 Access Token，返回 AES 加密报文（不再使用 `SHOP_INFO_TTS_*` 与本地磁盘缓存）。
+  - 表：`tts_app`（应用）、`tts_shop`（店铺 + `slug` + `encrypt_key`）、`tts_shop_app_token`（(shop, app) 授权）。
+  - MySQL 连接：`OPENAPI_TTS_DB_URL2`（`tts_*` 表专用；建表脚本见 `prisma/migrations/tts_schema.sql`）。
+  - OAuth 回调 `/callback/tt4s` 写入 `tts_*` 表；授权后需为对应 TikTok `shop.id` 配置 `tts_shop.slug` 与 `encrypt_key`。
+  - 旧 env（可选迁移参考）：`SHOP_INFO_TTS_{SHOP}` 已废弃。
 - Webhook MySQL 连接（直连）
   - `WEBHOOK_DB_CFG`：JSON 字符串，示例：
     ```
@@ -93,7 +91,7 @@
 4) 快速 smoke 测试：
    - `GET /ip/test` 查看出口 IP
    - `GET /file/download/7511947983685271557/Product-Level Customer Report 2025 July.xlsx` 验证下载
-   - `GET /tokens/tts/PACSUN`（需配置对应 `SHOP_INFO_TTS_PACSUN`）
+   - `GET /tokens/tts/PACSUN/{app_key}`（需已执行 `tts_schema.sql` 并完成 OAuth + slug/encrypt_key 配置）
    - `ALL /webhook/tts/{shop_id}` 提交含 `tts_notification_id/type/...` 的 JSON 验证入库
 
 ## 目录速览

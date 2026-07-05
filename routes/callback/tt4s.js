@@ -1,96 +1,137 @@
-const axios = require('axios');
-const prisma = require('../../utils/prisma-client'); 
+const { exchangeAuthCode } = require('../../utils/tts-api');
+const { getTtsApp } = require('../../utils/tts-db');
+const { syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
+const { buildFailureParams } = require('../../utils/tts-oauth-error');
 
-async function sendAccessTokenReq(app_key, grant_type, auth_code) {
-    var authResult = {}
-    if (auth_code === "123") {
+async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext = {}) {
+    if (auth_code === '123') {
         return {
             code: 0,
-            message: "Auth Code 123",
-        }
+            message: 'Auth Code 123',
+        };
     }
-    const appInfo = await getAppInfo(app_key)
+
+    const appInfo = await getTtsApp(app_key);
     if (appInfo === null) {
+        const failure = buildFailureParams(oauthContext, {
+            app_key,
+            step: 'app_lookup',
+            reason: 'Auth Failed: App Info Not Found',
+            detail: `在 tts_app 中未找到 app_key=${app_key}`,
+        });
         return {
             code: 1,
-            message: 'Auth Failed: App Info Not Found',
-        }
-    }
-    // console.log(`app_key: ${app_key}, app_secret: ${app_secret}`)
-
-    const config = {
-        method: 'GET',
-        url: "https://auth.tiktok-shops.com/api/v2/token/get",
-        headers: {
-        },
-        params: {
-            app_key, app_secret: appInfo.app_secret, grant_type, auth_code
-        }
-    };
-
-
-    /** Send Auth Request */
-    try {
-        const response = await axios(config);
-        // console.log(response.data)
-        authResult = response.data
-    } catch (err) {
-        console.error("Auth SendReq axios Error...");
-    }
-
-    /** Save Auth Result to DB */
-    if (authResult.code === 0) {
-        const appCredential = {
+            message: failure.reason,
             app_key,
-            access_token: authResult.data.access_token,
-            refresh_token: authResult.data.refresh_token,
-            access_token_expire_in: authResult.data.access_token_expire_in,
-            refresh_token_expire_in: authResult.data.refresh_token_expire_in,
+            step: failure.step,
+            detail: failure.detail,
+            failure_redirect: failureRedirectFromEnv(failure),
+        };
+    }
 
-            open_id: authResult.data.open_id,
-            seller_name: authResult.data.seller_name,
-            seller_base_region: authResult.data.seller_base_region,
-            user_type: authResult.data.user_type,
-            granted_scopes: authResult.data.granted_scopes.sort()
-        }
+    let tokenData;
+    try {
+        tokenData = await exchangeAuthCode(app_key, appInfo.app_secret, auth_code);
+    } catch (err) {
+        console.error('Auth SendReq axios Error...', err.message);
+        const failure = buildFailureParams(oauthContext, {
+            app_key,
+            step: 'token_exchange',
+            reason: 'Auth Failed: Token exchange error',
+            err,
+        });
+        return {
+            code: 1,
+            message: failure.reason,
+            app_key,
+            step: failure.step,
+            detail: failure.detail,
+            failure_redirect: buildOAuthResultUrl(appInfo, 'failure', failure),
+        };
+    }
 
-
-        await prisma.ApiCredential.create({
-            data: appCredential
-        })
-
-        appInfo.appCredential = appCredential
-    } else {
-        console.error("Auth Result Error...");
+    let shops;
+    try {
+        shops = await syncShopMetadataAndTokens(appInfo, tokenData);
+        console.log(`OAuth saved for app_key=${app_key}, shops=${shops.map((s) => s.id).join(',')}`);
+        appInfo.appCredential = {
+            app_key,
+            access_token: tokenData.access_token,
+            access_token_expire_in: tokenData.access_token_expire_in,
+            refresh_token: tokenData.refresh_token,
+            refresh_token_expire_in: tokenData.refresh_token_expire_in,
+            shop_ids: shops.map((s) => String(s.id)),
+            shops,
+        };
+    } catch (err) {
+        console.error('Auth save to DB failed:', err.message);
+        const failure = buildFailureParams(oauthContext, {
+            app_key,
+            step: 'sync_shops',
+            reason: 'Auth Failed: Could not persist credentials',
+            err,
+        });
+        return {
+            code: 1,
+            message: failure.reason,
+            app_key,
+            step: failure.step,
+            detail: failure.detail,
+            failure_redirect: appInfo.failure_path
+                ? buildOAuthResultUrl(appInfo, 'failure', failure)
+                : failureRedirectFromEnv(failure),
+        };
     }
 
     return {
-        redirect_url: `${appInfo.redirect_domain}${appInfo.success_path}`,
-        appCredential: appInfo.appCredential
+        code: 0,
+        redirect_url: buildOAuthResultUrl(appInfo, 'success', {
+            app_key,
+            shop_ids: shops.map((s) => String(s.id)).join(','),
+        }),
+        appCredential: appInfo.appCredential,
+    };
+}
+
+function failureRedirectFromEnv(params) {
+    const base = process.env.APP_PUBLIC_URL?.trim()?.replace(/\/$/, '');
+    if (!base) {
+        return null;
+    }
+    try {
+        const url = new URL(`${base}/failure`);
+        appendSearchParams(url, params);
+        return url.toString();
+    } catch {
+        return null;
     }
 }
 
-async function getAuthorizedShop() {
-    
+function appendSearchParams(url, params) {
+    for (const [key, value] of Object.entries(params)) {
+        if (value != null && value !== '') {
+            url.searchParams.set(key, String(value));
+        }
+    }
+}
+
+function buildOAuthResultUrl(appInfo, kind, params) {
+    const path = kind === 'success' ? appInfo.success_path : appInfo.failure_path;
+    const base = `${appInfo.redirect_domain}${path}`;
+    try {
+        const url = new URL(base);
+        appendSearchParams(url, params);
+        return url.toString();
+    } catch {
+        const qs = new URLSearchParams(
+            Object.fromEntries(
+                Object.entries(params).filter(([, v]) => v != null && v !== '')
+            )
+        ).toString();
+        return qs ? `${base}?${qs}` : base;
+    }
 }
 
 module.exports = {
-    SendAccessTokenReq_TTS: sendAccessTokenReq
-}
-
-async function getAppInfo(app_key) {
-    const appInfo = await prisma.App.findUnique({
-        where: {
-            app_key
-        }
-    })
-
-    return appInfo
-}
-
-async function test() {
-    const app_secret = await getAppSecret('6h92uttbf7u18')
-    console.log(app_secret)
-}
-
-// test()
+    SendAccessTokenReq_TTS: sendAccessTokenReq,
+};

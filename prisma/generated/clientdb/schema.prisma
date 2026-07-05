@@ -1,7 +1,6 @@
 // db: 用来存 API Token
 datasource db {
   provider = "mysql"
-  url      = env("OPENAPI_TTS_DB_URL")
 }
 
 // 为 db 生成 Client
@@ -12,13 +11,12 @@ generator clientdb {
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-// ================= Models =================
+// ================= Legacy models (unchanged tables) =================
 
-// db 表：API 凭证
 model ApiCredential {
   id                      Int      @id @default(autoincrement())
   app_key                 String
-  access_token            String
+  access_token            String   @db.VarChar(1024)
   access_token_expire_in  BigInt
   refresh_token           String
   refresh_token_expire_in BigInt
@@ -31,20 +29,84 @@ model ApiCredential {
   updatedAt               DateTime @updatedAt
 }
 
-// Shops
 model Shop {
-  id          Int    @id @default(autoincrement())
-  seller_id   String @unique
-  seller_name String
-  test        String
+  id          BigInt @id
+  code        String @db.VarChar(100)
+  name        String @db.VarChar(100)
+  region      String @db.VarChar(50)
+  seller_type String @db.VarChar(50)
+  cipher      String @db.VarChar(255)
+
+  @@map("shop")
 }
 
-// Apps 
 model App {
   id              Int    @id @default(autoincrement())
-  app_key         String @unique
-  app_secret      String
-  redirect_domain String
-  success_path    String
-  failure_path    String
+  app_key         String @unique @db.VarChar(191)
+  app_secret      String @db.VarChar(191)
+  redirect_domain String @db.VarChar(191)
+  success_path    String @db.VarChar(191)
+  failure_path    String @db.VarChar(191)
+  description     String @db.VarChar(191)
+  auth_url        String @default("") @db.VarChar(256)
+
+  @@map("app")
+}
+
+// ================= TikTok Shop (tts_* tables) =================
+
+model TtsApp {
+  id              Int    @id @default(autoincrement())
+  app_key         String @unique @db.VarChar(191)
+  app_secret      String @db.VarChar(191)
+  redirect_domain String @db.VarChar(191)
+  success_path    String @db.VarChar(191)
+  failure_path    String @db.VarChar(191)
+  description     String @db.VarChar(191)
+  auth_url        String @default("") @db.VarChar(256)
+
+  tokens TtsShopAppToken[]
+
+  @@map("tts_app")
+}
+
+model TtsShop {
+  id          BigInt  @id
+  slug        String? @unique @db.VarChar(64)
+  encrypt_key String? @db.VarChar(255)
+  code        String  @default("") @db.VarChar(100)
+  name        String  @default("") @db.VarChar(100)
+  region      String  @default("") @db.VarChar(50)
+  seller_type String  @default("") @db.VarChar(50)
+  cipher      String  @default("") @db.VarChar(255)
+  is_active   Boolean @default(true)
+
+  tokens TtsShopAppToken[]
+
+  @@map("tts_shop")
+}
+
+model TtsShopAppToken {
+  id                      Int       @id @default(autoincrement())
+  shop_id                 BigInt
+  app_key                 String    @db.VarChar(191)
+  access_token            String    @db.VarChar(1024)
+  access_token_expire_in  BigInt
+  refresh_token           String    @db.VarChar(512)
+  refresh_token_expire_in BigInt
+  open_id                 String    @default("") @db.VarChar(128)
+  seller_name             String    @default("") @db.VarChar(255)
+  seller_base_region      String    @default("") @db.VarChar(50)
+  user_type               Int       @default(0)
+  granted_scopes          Json
+  status                  String    @default("active") @db.VarChar(32)
+  last_refreshed_at       DateTime?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  shop TtsShop @relation(fields: [shop_id], references: [id])
+  app  TtsApp  @relation(fields: [app_key], references: [app_key])
+
+  @@unique([shop_id, app_key])
+  @@map("tts_shop_app_token")
 }

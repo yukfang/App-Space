@@ -1,151 +1,97 @@
 const Router = require('koa-router');
 const path = require('path');
 
-const axios = require('axios');
 const aes256cbc = require('../../utils/aes-256-cbc');
-const hmac = require('../../utils/hmac');
-
 const { DateTime } = require('luxon');
-const { LocalDisk } = require('../storage/localdisk');
+const {
+    getTokenBundleBySlugAndAppKey,
+    markTokenRefreshFailed,
+    tokenRowFromOAuth,
+    upsertTokensForShops,
+} = require('../../utils/tts-db');
+const { refreshAccessToken, syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
+
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-
-let SHOP = ''
-let shopInfo = {}
+const ACCESS_TOKEN_REFRESH_BUFFER_SEC = 3600 * 6;
 
 const router = new Router({ prefix: `/tokens/tts` });
 
-router.get('/:key', async (ctx) => {
-    SHOP = ctx.params.key.toUpperCase();
-    console.log('shop', SHOP);
-    shopInfo = JSON.parse(process.env[`SHOP_INFO_TTS_${SHOP}`])
+router.get('/:slug/:app_key', async (ctx) => {
+    const slug = ctx.params.slug.toUpperCase();
+    const app_key = ctx.params.app_key;
+    const forceRefresh = ctx.query.force_refresh === 'true';
 
-    await handleTokenRequest(ctx);
-});
-
-async function handleTokenRequest(ctx) {
-    /** read query param force_refresh; if true, refresh token */
-    let forceRefresh = ctx.query.force_refresh === 'true';
-    if (forceRefresh) {
-        let newToken = await refreshToken()
-        console.log('newToken', newToken)
-        newToken.refresh_token = "*****"
-        LocalDisk.writeFileSync(`/tokens/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
-    }
-
-
-    let data = {}
-    let cache = LocalDisk.readFileSync(`/tokens/${SHOP}`, 'tokens.json');
-    /** If there is no cache, build cache first */
-    if (!cache) {
-        let newToken = await refreshToken()
-        console.log('newToken', newToken)
-        newToken.refresh_token = "*****"
-        // console.log('newToken', newToken)
-        LocalDisk.writeFileSync(`/tokens/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
-        data = {
-            access_token: newToken.access_token,
-            app_secret: shopInfo.app_secret,
-            app_key: shopInfo.app_key,
-            shop_cipher: shopInfo.shop_cipher,
-            access_token_expire_in: newToken.access_token_expire_in,
-
-        }
-    } else {
-        let cacheData = JSON.parse(cache.toString());
-        console.log('Token will expire in ' + DateTime.now().toSeconds() - cacheData.access_token_expire_in)
-        if (!cacheData.access_token_expire_in || DateTime.now().toSeconds() + 3600 * 6 > cacheData.access_token_expire_in) {
-            console.log('cache expired')
-            let newToken = await refreshToken()
-            newToken.refresh_token = "*****"
-            LocalDisk.writeFileSync(`/tokens/${SHOP}`, 'tokens.json', JSON.stringify(newToken, null, 2));
-            data = {
-                access_token: newToken.access_token,
-                app_secret: shopInfo.app_secret,
-                app_key: shopInfo.app_key,
-                shop_cipher: shopInfo.shop_cipher,
-
-                access_token_expire_in: newToken.access_token_expire_in
-            }
-        } else {
-            data = {
-                access_token: cacheData.access_token,
-                app_secret: shopInfo.app_secret,
-                app_key: shopInfo.app_key,
-                shop_cipher: shopInfo.shop_cipher,
-                access_token_expire_in: cacheData.access_token_expire_in,
-            }
-        }
-    }
-    const encryptedText = aes256cbc.encryptText(JSON.stringify(data), shopInfo.encrypt_key.repeat(32).substring(0, 32));
-    ctx.body = encryptedText
-}
-
-
-const baseUrl = "https://open-api.tiktokglobalshop.com"
-async function testApiToken(access_token, app_key, app_secret) {
+    let bundle;
     try {
-        const path = '/authorization/202309/shops';
-        const config = {
-            method: 'GET',
-            url: `${baseUrl}${path}`,
-            headers: { 'x-tts-access-token': access_token, 'Content-Type': 'application/json' },
-            params: {
-                app_key: app_key,
-                timestamp: Math.floor(Date.now() / 1000)
-            }
-        }
-        config.params.sign = hmac.hmac_sign(config, app_secret);
-
-        console.log(config)
-
-        const response = await axios(config);
-        if (response.status === 200 && response.data.code === 0) {
-            return true
-        } else {
-            throw new Error(`Error fetching shops: ${response.data.msg}`);
-        }
+        bundle = await getTokenBundleBySlugAndAppKey(slug, app_key);
     } catch (error) {
-        console.log(`Error Testing Api Token: ${error.message}`);
-        return false;
-    }
-}
-
-async function refreshToken() {
-    const baseUrl = "https://auth.tiktok-shops.com"
-    const path = `/api/v2/token/refresh`
-    const method = "GET"
-    const url = `${baseUrl}${path}`
-    const headers = { 'Content-Type': 'application/json' }
-    const params = {
-        app_key: shopInfo.app_key,
-        app_secret: shopInfo.app_secret,
-        refresh_token: shopInfo.refresh_token,
-        grant_type: 'refresh_token'
+        console.log(`[${slug}/${app_key}] DB error: ${error.message}`);
+        ctx.status = 503;
+        ctx.body = { error: 'Database unavailable' };
+        return;
     }
 
-    const reqConfig = {
-        method,
-        url,
-        headers,
-        params,
-        maxRedirects: 1
+    if (!bundle) {
+        ctx.status = 404;
+        ctx.body = { error: 'Shop authorization not found' };
+        return;
+    }
+    if (!bundle.is_active) {
+        ctx.status = 403;
+        ctx.body = { error: 'Shop is inactive' };
+        return;
+    }
+    if (bundle.token_status !== 'active') {
+        ctx.status = 403;
+        ctx.body = { error: `Token status: ${bundle.token_status}` };
+        return;
+    }
+    if (!bundle.encrypt_key) {
+        ctx.status = 500;
+        ctx.body = { error: 'Shop encrypt_key is not configured' };
+        return;
+    }
+
+    let accessToken = bundle.access_token;
+    let accessTokenExpireIn = Number(bundle.access_token_expire_in);
+    let refreshToken = bundle.refresh_token;
+
+    const nowSec = DateTime.now().toSeconds();
+    const shouldRefresh =
+        forceRefresh ||
+        !accessTokenExpireIn ||
+        nowSec + ACCESS_TOKEN_REFRESH_BUFFER_SEC > accessTokenExpireIn;
+
+    if (shouldRefresh) {
+        const app = { app_key: bundle.app_key, app_secret: bundle.app_secret };
+        try {
+            const tokenData = await refreshAccessToken(app.app_key, app.app_secret, refreshToken);
+            await syncShopMetadataAndTokens(app, tokenData, [String(bundle.shop_id)]);
+            accessToken = tokenData.access_token;
+            accessTokenExpireIn = Number(tokenData.access_token_expire_in);
+        } catch (error) {
+            console.log(`[${slug}/${app_key}] Refresh failed: ${error.message}`);
+            await markTokenRefreshFailed(bundle.shop_id, app_key).catch(() => {});
+            ctx.status = 503;
+            ctx.body = { error: 'Token refresh failed' };
+            return;
+        }
+    }
+
+    const refreshed = await getTokenBundleBySlugAndAppKey(slug, app_key);
+    const shopCipher = refreshed?.shop_cipher ?? bundle.shop_cipher;
+
+    const data = {
+        access_token: accessToken,
+        app_secret: bundle.app_secret,
+        app_key: bundle.app_key,
+        shop_cipher: shopCipher,
+        access_token_expire_in: accessTokenExpireIn,
     };
 
-    try {
-        console.log(`Token Refresh Request : ${JSON.stringify(reqConfig)}`)
-        const response = await axios(reqConfig);
-
-        if (response.status === 200 && response.data.code === 0) {
-            return response.data.data;
-        } else {
-            console.log(`Token Refresh Failed`)
-            console.log(response.data)
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        throw error;
-    }
-}
+    const encryptKey = bundle.encrypt_key.repeat(32).substring(0, 32);
+    ctx.body = aes256cbc.encryptText(JSON.stringify(data), encryptKey);
+});
 
 module.exports = router;

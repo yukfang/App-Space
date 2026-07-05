@@ -6,6 +6,8 @@ const ipRouter = require('./routes/ip/myip');
 const routeTokensTTS = require('./routes/tokens/tts');
 const routeTokensSnap = require('./routes/tokens/snap');
 const callbackRouter = require('./routes/callback/handle');
+const ttsAuthRouter = require('./routes/auth/tts');
+const ttsOAuthResultRouter = require('./routes/oauth/tts-result');
 const fileDownloadRouter = require('./routes/file/download');
 const proxyRouter = require('./routes/proxy/index')
 const webhookRouter = require('./routes/webhook/index')
@@ -48,6 +50,8 @@ koaApp.use(async (ctx, next) => {
 // routes
 koaApp.use(ssvmlistRouter.routes()).use(ssvmlistRouter.allowedMethods())
 koaApp.use(routeTokensTTS.routes()).use(routeTokensTTS.allowedMethods())
+koaApp.use(ttsAuthRouter.routes()).use(ttsAuthRouter.allowedMethods())
+koaApp.use(ttsOAuthResultRouter.routes()).use(ttsOAuthResultRouter.allowedMethods())
 koaApp.use(routeTokensSnap.routes()).use(routeTokensSnap.allowedMethods())
 koaApp.use(ipRouter.routes()).use(ipRouter.allowedMethods())
 koaApp.use(sshTunnelRouter.routes()).use(sshTunnelRouter.allowedMethods())
