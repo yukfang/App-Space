@@ -1,5 +1,6 @@
 const axios = require('axios');
 const hmac = require('./hmac');
+const { toTtsShopId } = require('./tts-shop-id');
 
 const OPEN_API_BASE = 'https://open-api.tiktokglobalshop.com';
 const AUTH_BASE = 'https://auth.tiktok-shops.com';
@@ -74,7 +75,9 @@ function normalizeShopList(shopData) {
         return [];
     }
     const shops = shopData.shops ?? (Array.isArray(shopData) ? shopData : []);
-    return shops.filter((s) => s.id != null && s.id !== '');
+    return shops
+        .filter((s) => s.id != null && s.id !== '')
+        .map((s) => ({ ...s, id: toTtsShopId(s.id) }));
 }
 
 module.exports = {

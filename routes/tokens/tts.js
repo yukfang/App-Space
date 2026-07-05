@@ -8,6 +8,7 @@ const {
     markTokenRefreshFailed,
 } = require('../../utils/tts-db');
 const { refreshAccessToken, syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
+const { toTtsShopId } = require('../../utils/tts-shop-id');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -24,11 +25,12 @@ router.get('/:shop_id/:app_key', async (ctx) => {
     await issueEncryptedToken(ctx, {
         app_key,
         logLabel,
+        shopId: toTtsShopId(shop_id),
         loadBundle: () => getTokenBundleByShopIdAndAppKey(shop_id, app_key),
     });
 });
 
-async function issueEncryptedToken(ctx, { app_key, logLabel, loadBundle }) {
+async function issueEncryptedToken(ctx, { app_key, logLabel, shopId, loadBundle }) {
     const forceRefresh = ctx.query.force_refresh === 'true';
 
     let bundle;
@@ -65,7 +67,7 @@ async function issueEncryptedToken(ctx, { app_key, logLabel, loadBundle }) {
     let accessToken = bundle.access_token;
     let accessTokenExpireIn = Number(bundle.access_token_expire_in);
     const refreshToken = bundle.refresh_token;
-    const resolvedShopId = String(bundle.shop_id);
+    const resolvedShopId = shopId;
 
     const nowSec = DateTime.now().toSeconds();
     const shouldRefresh =

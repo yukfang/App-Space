@@ -18,6 +18,8 @@ function getApiAuthDbPool() {
             connectionLimit: 10,
             waitForConnections: true,
             enableKeepAlive: true,
+            supportBigNumbers: true,
+            bigNumberStrings: true,
         });
     }
     return pool;

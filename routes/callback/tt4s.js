@@ -3,6 +3,7 @@ const { getTtsApp } = require('../../utils/tts-db');
 const { syncShopMetadataAndTokens } = require('../../utils/tts-oauth-sync');
 const { buildFailureParams } = require('../../utils/tts-oauth-error');
 const { oauthResultBaseUrl, joinPublicPath } = require('../../utils/app-public-url');
+const { toTtsShopId } = require('../../utils/tts-shop-id');
 
 async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext = {}) {
     const currentOrigin = oauthContext.currentOrigin || '';
@@ -62,7 +63,7 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
             access_token_expire_in: tokenData.access_token_expire_in,
             refresh_token: tokenData.refresh_token,
             refresh_token_expire_in: tokenData.refresh_token_expire_in,
-            shop_ids: shops.map((s) => String(s.id)),
+            shop_ids: shops.map((s) => toTtsShopId(s.id)),
             shops,
         };
     } catch (err) {
@@ -89,7 +90,7 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
         code: 0,
         redirect_url: buildOAuthResultUrl(appInfo, 'success', {
             app_key,
-            shop_ids: shops.map((s) => String(s.id)).join(','),
+            shop_ids: shops.map((s) => toTtsShopId(s.id)).join(','),
         }, currentOrigin),
         appCredential: appInfo.appCredential,
     };
