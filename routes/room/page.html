@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
+    header { background: #fff; border-bottom: 1px solid #e3e6ea; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 16px; color: #1f2329; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #status { font-size: 12px; color: #86909c; }
+    #status.online { color: #00b42a; }
+    #status.offline { color: #f53f3f; }
+    #msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 70%; align-self: flex-start; background: #fff; border-radius: 10px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    .msg.mine { align-self: flex-end; background: #d7f0ff; }
+    .msg .meta { font-size: 11px; color: #86909c; margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+    .msg .sender { font-weight: 600; color: #4e5969; }
+    .msg .ops { margin-left: auto; display: inline-flex; gap: 6px; }
+    .msg .ops button { border: none; background: transparent; color: #86909c; cursor: pointer; font-size: 12px; padding: 0 2px; }
+    .msg .ops button:hover { color: #1d2129; }
+    .msg .ops button.del:hover { color: #f53f3f; }
+    .msg .text { font-size: 14px; color: #1d2129; white-space: pre-wrap; word-break: break-word; }
+    .msg .text[contenteditable] { outline: 2px solid #4080ff; border-radius: 4px; padding: 2px 4px; }
+    .msg img { max-width: 260px; max-height: 260px; border-radius: 6px; display: block; cursor: zoom-in; }
+    .msg .file { display: flex; align-items: center; gap: 8px; color: #4080ff; text-decoration: none; font-size: 14px; }
+    .msg .file:hover { text-decoration: underline; }
+    .empty { text-align: center; color: #c9cdd4; font-size: 13px; margin-top: 40px; }
+    footer { background: #fff; border-top: 1px solid #e3e6ea; padding: 10px 16px; display: flex; gap: 8px; align-items: center; }
+    #input { flex: 1; border: 1px solid #e3e6ea; border-radius: 8px; padding: 8px 12px; font-size: 14px; resize: none; outline: none; font-family: inherit; }
+    #input:focus { border-color: #4080ff; }
+    button.action { border: none; background: #4080ff; color: #fff; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+    button.action:hover { background: #3370e0; }
+    button.icon { border: 1px solid #e3e6ea; background: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+    button.icon:hover { background: #f2f3f5; }
+    #toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1d2129; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 10; }
+    @media (max-width: 600px) { .msg { max-width: 85%; } .msg img { max-width: 200px; max-height: 200px; } }
+</style>
+</head>
+<body>
+<header>
+    <h1 id="roomTitle"></h1>
+    <span id="status">连接中…</span>
+</header>
+<div id="msgs"></div>
+<footer>
+    <textarea id="input" rows="1" placeholder="输入内容，回车发送，Shift+回车换行"></textarea>
+    <button class="icon" id="btnImage" title="发送图片">图片</button>
+    <button class="icon" id="btnFile" title="发送文件">文件</button>
+    <button class="action" id="btnSend">发送</button>
+    <input type="file" id="fileImage" accept="image/*" style="display:none">
+    <input type="file" id="fileAny" style="display:none">
+</footer>
+<div id="toast"></div>
+<script>
+(function () {
+    const MAX_FILE_BYTES = 25 * 1024 * 1024;
+    const roomName = decodeURIComponent(location.pathname.replace(/^\/room\//, '')).replace(/\/+$/, '');
+    const sender = (crypto.randomUUID) ? crypto.randomUUID() : 'client-' + Math.random().toString(36).slice(2);
+
+    const msgsEl = document.getElementById('msgs');
+    const inputEl = document.getElementById('input');
+    const statusEl = document.getElementById('status');
+    const toastEl = document.getElementById('toast');
+    document.getElementById('roomTitle').textContent = 'Room: ' + roomName;
+
+    let es = null;
+
+    function connect() {
+        es = new EventSource('/room/' + encodeURIComponent(roomName) + '/events');
+        es.onopen = function () { statusEl.textContent = '在线'; statusEl.className = 'online'; };
+        es.onerror = function () { statusEl.textContent = '离线，重连中…'; statusEl.className = 'offline'; };
+        es.addEventListener('snapshot', function (e) {
+            const messages = JSON.parse(e.data);
+            msgsEl.innerHTML = '';
+            if (!messages.length) {
+                msgsEl.innerHTML = '<div class="empty">暂无内容，发送第一条消息吧</div>';
+            } else {
+                messages.forEach(render);
+            }
+            scrollBottom();
+        });
+        es.addEventListener('message', function (e) {
+            const data = JSON.parse(e.data);
+            if (data.op === 'add' || data.op === 'update') upsert(data.message);
+            else if (data.op === 'delete') remove(data.message.id);
+        });
+    }
+
+    function opsWrap(buttons) {
+        const span = document.createElement('span');
+        span.className = 'ops';
+        buttons.forEach(function (b) { span.appendChild(b); });
+        return span;
+    }
+
+    function delButton(id) {
+        const btn = document.createElement('button');
+        btn.className = 'del';
+        btn.textContent = '删除';
+        btn.addEventListener('click', function () { sendOp({ op: 'delete', id: id }); });
+        return btn;
+    }
+
+    function render(m) {
+        const el = document.createElement('div');
+        el.className = 'msg' + (m.sender === sender ? ' mine' : '');
+        el.dataset.id = m.id;
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const who = document.createElement('span');
+        who.className = 'sender';
+        who.textContent = (m.sender === sender) ? '你' : '其他用户';
+        const ts = document.createElement('span');
+        ts.textContent = new Date(m.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        meta.appendChild(who);
+        meta.appendChild(ts);
+
+        const body = document.createElement('div');
+        if (m.type === 'text') {
+            body.className = 'text';
+            body.textContent = m.content;
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '编辑';
+            editBtn.addEventListener('click', function () { startEdit(m.id, body, editBtn); });
+            meta.appendChild(opsWrap([editBtn, delButton(m.id)]));
+        } else if (m.type === 'image') {
+            const a = document.createElement('a');
+            a.href = m.url;
+            a.target = '_blank';
+            const img = document.createElement('img');
+            img.src = m.url;
+            img.loading = 'lazy';
+            img.alt = m.name || 'image';
+            a.appendChild(img);
+            body.appendChild(a);
+            meta.appendChild(opsWrap([delButton(m.id)]));
+        } else if (m.type === 'file') {
+            const a = document.createElement('a');
+            a.className = 'file';
+            a.href = m.url;
+            a.textContent = m.name + ' (' + formatSize(m.size) + ')';
+            body.appendChild(a);
+            meta.appendChild(opsWrap([delButton(m.id)]));
+        }
+
+        el.appendChild(meta);
+        el.appendChild(body);
+        msgsEl.appendChild(el);
+        const empty = msgsEl.querySelector('.empty');
+        if (empty) empty.remove();
+    }
+
+    function upsert(m) {
+        const existing = msgsEl.querySelector('.msg[data-id="' + m.id + '"]');
+        if (existing) {
+            const textEl = existing.querySelector('.text');
+            if (textEl) textEl.textContent = m.content;
+            return;
+        }
+        render(m);
+        scrollBottom();
+    }
+
+    function remove(id) {
+        const el = msgsEl.querySelector('.msg[data-id="' + id + '"]');
+        if (el) el.remove();
+        if (!msgsEl.querySelector('.msg')) {
+            msgsEl.innerHTML = '<div class="empty">暂无内容，发送第一条消息吧</div>';
+        }
+    }
+
+    function startEdit(id, el, btn) {
+        if (el.isContentEditable) { el.blur(); return; }
+        const original = el.textContent;
+        el.contentEditable = 'true';
+        el.focus();
+        btn.textContent = '保存';
+        let pendingSave = false;
+        const finish = function () {
+            el.contentEditable = 'false';
+            btn.textContent = '编辑';
+            btn.onclick = function () { startEdit(id, el, btn); };
+            const save = pendingSave;
+            pendingSave = false;
+            const content = el.textContent.trim();
+            if (save && content && content !== original) {
+                sendOp({ op: 'update', id: id, content: content });
+            } else if (!save) {
+                el.textContent = original;
+            }
+        };
+        btn.addEventListener('mousedown', function (ev) { ev.preventDefault(); pendingSave = true; });
+        btn.onclick = function () { pendingSave = true; finish(); };
+        el.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); pendingSave = true; finish(); }
+            else if (ev.key === 'Escape') { finish(); }
+        });
+        el.addEventListener('blur', finish);
+    }
+
+    async function sendOp(payload) {
+        payload.sender = sender;
+        try {
+            const res = await fetch('/room/' + encodeURIComponent(roomName) + '/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(function () { return {}; });
+                toast(data.error || '操作失败');
+            }
+        } catch (e) {
+            toast('网络错误');
+        }
+    }
+
+    function sendText() {
+        const content = inputEl.value.trim();
+        if (!content) return;
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        sendOp({ op: 'add', type: 'text', content: content });
+    }
+
+    inputEl.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' && !ev.shiftKey) {
+            ev.preventDefault();
+            sendText();
+        }
+    });
+    inputEl.addEventListener('input', function () {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+    });
+    document.getElementById('btnSend').addEventListener('click', sendText);
+    document.getElementById('btnImage').addEventListener('click', function () { document.getElementById('fileImage').click(); });
+    document.getElementById('btnFile').addEventListener('click', function () { document.getElementById('fileAny').click(); });
+    document.getElementById('fileImage').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (file) uploadFile(file, 'image');
+    });
+    document.getElementById('fileAny').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (file) uploadFile(file, 'file');
+    });
+
+    async function uploadFile(file, type) {
+        if (file.size > MAX_FILE_BYTES) { toast('文件不能超过 25MB'); return; }
+        let b64;
+        try {
+            b64 = await readAsBase64(file);
+        } catch (e) {
+            toast('读取文件失败');
+            return;
+        }
+        sendOp({ op: 'add', type: type, content: b64, name: file.name, mime: file.type || 'application/octet-stream' });
+    }
+
+    function readAsBase64(file) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.onload = function () { resolve(String(reader.result).split(',')[1]); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function formatSize(n) {
+        if (n < 1024) return n + ' B';
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+        return (n / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function scrollBottom() {
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    let toastTimer;
+    function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.style.display = 'none'; }, 2500);
+    }
+
+    window.addEventListener('beforeunload', function () { if (es) es.close(); });
+
+    connect();
+})();
+</script>
+</body>
+</html>

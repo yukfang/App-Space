@@ -12,11 +12,12 @@ const fileDownloadRouter = require('./routes/file/download');
 const proxyRouter = require('./routes/proxy/index')
 const webhookRouter = require('./routes/webhook/index')
 const loginRouter = require('./routes/login/index')
+const roomRouter = require('./routes/room/index')
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 require('dotenv').config();
 
 const koaApp = new Koa();
-koaApp.use(bodyParser())
+koaApp.use(bodyParser({ jsonLimit: '50mb' }))
 
 // logger
 koaApp.use(async (ctx, next) => {
@@ -72,6 +73,7 @@ koaApp.use(callbackRouter.routes()).use(callbackRouter.allowedMethods({
 koaApp.use(proxyRouter.routes()).use(proxyRouter.allowedMethods())
 koaApp.use(loginRouter.routes()).use(loginRouter.allowedMethods())
 koaApp.use(webhookRouter.routes()).use(webhookRouter.allowedMethods())
+koaApp.use(roomRouter.routes()).use(roomRouter.allowedMethods())
 
 
 
