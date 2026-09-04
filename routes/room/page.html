@@ -7,26 +7,23 @@
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
-    header { background: #fff; border-bottom: 1px solid #e3e6ea; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 16px; color: #1f2329; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #status { font-size: 12px; color: #86909c; }
-    #status.online { color: #00b42a; }
-    #status.offline { color: #f53f3f; }
-    #msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { max-width: 70%; align-self: flex-start; background: #fff; border-radius: 10px; padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-    .msg.mine { align-self: flex-end; background: #d7f0ff; }
-    .msg .meta { font-size: 11px; color: #86909c; margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
-    .msg .sender { font-weight: 600; color: #4e5969; }
-    .msg .ops { margin-left: auto; display: inline-flex; gap: 6px; }
-    .msg .ops button { border: none; background: transparent; color: #86909c; cursor: pointer; font-size: 12px; padding: 0 2px; }
-    .msg .ops button:hover { color: #1d2129; }
-    .msg .ops button.del:hover { color: #f53f3f; }
-    .msg .text { font-size: 14px; color: #1d2129; white-space: pre-wrap; word-break: break-word; }
-    .msg .text[contenteditable] { outline: 2px solid #4080ff; border-radius: 4px; padding: 2px 4px; }
-    .msg img { max-width: 260px; max-height: 260px; border-radius: 6px; display: block; cursor: zoom-in; }
-    .msg .file { display: flex; align-items: center; gap: 8px; color: #4080ff; text-decoration: none; font-size: 14px; }
-    .msg .file:hover { text-decoration: underline; }
-    .empty { text-align: center; color: #c9cdd4; font-size: 13px; margin-top: 40px; }
+    #board { flex: 1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 16px; min-height: 0; }
+    .col { background: #fff; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.06); display: flex; flex-direction: column; min-height: 0; }
+    .col-head { padding: 10px 14px; font-weight: 700; font-size: 13px; color: #1d2129; border-bottom: 1px solid #e3e6ea; letter-spacing: 1px; }
+    .col-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .empty { text-align: center; color: #c9cdd4; font-size: 13px; margin: 20px 0; }
+    .item { background: #f7f8fa; border-radius: 8px; padding: 8px 10px; }
+    .item .meta { font-size: 11px; color: #86909c; margin-bottom: 4px; }
+    .item .meta .sender { font-weight: 600; color: #4e5969; }
+    .item .text { font-size: 14px; color: #1d2129; white-space: pre-wrap; word-break: break-word; }
+    .item img { max-width: 100%; max-height: 220px; border-radius: 6px; display: block; cursor: zoom-in; }
+    .item .fname { font-size: 13px; color: #1d2129; word-break: break-all; }
+    .item .fsize { font-size: 11px; color: #86909c; margin-top: 2px; }
+    .item .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .item button { border: 1px solid #e3e6ea; background: #fff; border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: #4e5969; }
+    .item button:hover { border-color: #4080ff; color: #4080ff; }
+    .item button.del:hover { border-color: #f53f3f; color: #f53f3f; }
     footer { background: #fff; border-top: 1px solid #e3e6ea; padding: 10px 16px; display: flex; gap: 8px; align-items: center; }
     #input { flex: 1; border: 1px solid #e3e6ea; border-radius: 8px; padding: 8px 12px; font-size: 14px; resize: none; outline: none; font-family: inherit; }
     #input:focus { border-color: #4080ff; }
@@ -35,15 +32,28 @@
     button.icon { border: 1px solid #e3e6ea; background: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
     button.icon:hover { background: #f2f3f5; }
     #toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1d2129; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 10; }
-    @media (max-width: 600px) { .msg { max-width: 85%; } .msg img { max-width: 200px; max-height: 200px; } }
+    @media (max-width: 800px) {
+        #board { grid-template-columns: 1fr; overflow-y: auto; }
+        .col { max-height: 33vh; }
+        .item img { max-height: 180px; }
+    }
 </style>
 </head>
 <body>
-<header>
-    <h1 id="roomTitle"></h1>
-    <span id="status">连接中…</span>
-</header>
-<div id="msgs"></div>
+<div id="board">
+    <section class="col" id="col-txt">
+        <div class="col-head">TXT</div>
+        <div class="col-body"><div class="empty">暂无</div></div>
+    </section>
+    <section class="col" id="col-image">
+        <div class="col-head">IMAGE</div>
+        <div class="col-body"><div class="empty">暂无</div></div>
+    </section>
+    <section class="col" id="col-file">
+        <div class="col-head">FILE</div>
+        <div class="col-body"><div class="empty">暂无</div></div>
+    </section>
+</div>
 <footer>
     <textarea id="input" rows="1" placeholder="输入内容，回车发送，Shift+回车换行"></textarea>
     <button class="icon" id="btnImage" title="发送图片">图片</button>
@@ -59,27 +69,26 @@
     const roomName = decodeURIComponent(location.pathname.replace(/^\/room\//, '')).replace(/\/+$/, '');
     const sender = (crypto.randomUUID) ? crypto.randomUUID() : 'client-' + Math.random().toString(36).slice(2);
 
-    const msgsEl = document.getElementById('msgs');
+    const cols = {
+        text: document.getElementById('col-txt').querySelector('.col-body'),
+        image: document.getElementById('col-image').querySelector('.col-body'),
+        file: document.getElementById('col-file').querySelector('.col-body')
+    };
     const inputEl = document.getElementById('input');
-    const statusEl = document.getElementById('status');
     const toastEl = document.getElementById('toast');
-    document.getElementById('roomTitle').textContent = 'Room: ' + roomName;
+    const fileImageEl = document.getElementById('fileImage');
+    const fileAnyEl = document.getElementById('fileAny');
 
     let es = null;
 
     function connect() {
         es = new EventSource('/room/' + encodeURIComponent(roomName) + '/events');
-        es.onopen = function () { statusEl.textContent = '在线'; statusEl.className = 'online'; };
-        es.onerror = function () { statusEl.textContent = '离线，重连中…'; statusEl.className = 'offline'; };
         es.addEventListener('snapshot', function (e) {
             const messages = JSON.parse(e.data);
-            msgsEl.innerHTML = '';
-            if (!messages.length) {
-                msgsEl.innerHTML = '<div class="empty">暂无内容，发送第一条消息吧</div>';
-            } else {
-                messages.forEach(render);
-            }
-            scrollBottom();
+            Object.keys(cols).forEach(function (t) {
+                cols[t].innerHTML = '<div class="empty">暂无</div>';
+            });
+            messages.forEach(render);
         });
         es.addEventListener('message', function (e) {
             const data = JSON.parse(e.data);
@@ -88,11 +97,10 @@
         });
     }
 
-    function opsWrap(buttons) {
-        const span = document.createElement('span');
-        span.className = 'ops';
-        buttons.forEach(function (b) { span.appendChild(b); });
-        return span;
+    function emptyCol(t) {
+        if (!cols[t].querySelector('.item')) {
+            cols[t].innerHTML = '<div class="empty">暂无</div>';
+        }
     }
 
     function delButton(id) {
@@ -104,28 +112,27 @@
     }
 
     function render(m) {
-        const el = document.createElement('div');
-        el.className = 'msg' + (m.sender === sender ? ' mine' : '');
-        el.dataset.id = m.id;
+        const col = cols[m.type];
+        if (!col) return;
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.dataset.id = m.id;
 
         const meta = document.createElement('div');
         meta.className = 'meta';
-        const who = document.createElement('span');
-        who.className = 'sender';
-        who.textContent = (m.sender === sender) ? '你' : '其他用户';
+        const senderEl = document.createElement('span');
+        senderEl.className = 'sender';
+        senderEl.textContent = (m.sender === sender) ? '你' : '其他用户';
         const ts = document.createElement('span');
-        ts.textContent = new Date(m.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        meta.appendChild(who);
+        ts.textContent = ' ' + new Date(m.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        meta.appendChild(senderEl);
         meta.appendChild(ts);
+        item.appendChild(meta);
 
         const body = document.createElement('div');
         if (m.type === 'text') {
             body.className = 'text';
             body.textContent = m.content;
-            const editBtn = document.createElement('button');
-            editBtn.textContent = '编辑';
-            editBtn.addEventListener('click', function () { startEdit(m.id, body, editBtn); });
-            meta.appendChild(opsWrap([editBtn, delButton(m.id)]));
         } else if (m.type === 'image') {
             const a = document.createElement('a');
             a.href = m.url;
@@ -136,69 +143,92 @@
             img.alt = m.name || 'image';
             a.appendChild(img);
             body.appendChild(a);
-            meta.appendChild(opsWrap([delButton(m.id)]));
         } else if (m.type === 'file') {
-            const a = document.createElement('a');
-            a.className = 'file';
-            a.href = m.url;
-            a.textContent = m.name + ' (' + formatSize(m.size) + ')';
-            body.appendChild(a);
-            meta.appendChild(opsWrap([delButton(m.id)]));
+            const fname = document.createElement('div');
+            fname.className = 'fname';
+            fname.textContent = m.name;
+            const fsize = document.createElement('div');
+            fsize.className = 'fsize';
+            fsize.textContent = formatSize(m.size);
+            body.appendChild(fname);
+            body.appendChild(fsize);
         }
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.appendChild(body);
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        if (m.type === 'text') {
+            actions.appendChild(actionButton('复制', function () { copyText(m.content); }));
+        } else if (m.type === 'image') {
+            actions.appendChild(actionButton('复制', function () { copyImage(m.url); }));
+        } else if (m.type === 'file') {
+            actions.appendChild(actionButton('下载', function () { downloadFile(m.url, m.name); }));
+        }
+        actions.appendChild(delButton(m.id));
+        row.appendChild(actions);
+        item.appendChild(row);
 
-        el.appendChild(meta);
-        el.appendChild(body);
-        msgsEl.appendChild(el);
-        const empty = msgsEl.querySelector('.empty');
+        const empty = col.querySelector('.empty');
         if (empty) empty.remove();
+        col.appendChild(item);
+    }
+
+    function actionButton(label, handler) {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.addEventListener('click', handler);
+        return btn;
     }
 
     function upsert(m) {
-        const existing = msgsEl.querySelector('.msg[data-id="' + m.id + '"]');
+        const col = cols[m.type];
+        if (!col) return;
+        const existing = col.querySelector('.item[data-id="' + m.id + '"]');
         if (existing) {
             const textEl = existing.querySelector('.text');
             if (textEl) textEl.textContent = m.content;
             return;
         }
         render(m);
-        scrollBottom();
     }
 
     function remove(id) {
-        const el = msgsEl.querySelector('.msg[data-id="' + id + '"]');
-        if (el) el.remove();
-        if (!msgsEl.querySelector('.msg')) {
-            msgsEl.innerHTML = '<div class="empty">暂无内容，发送第一条消息吧</div>';
+        const el = document.querySelector('.item[data-id="' + id + '"]');
+        if (!el) return;
+        const col = el.parentNode;
+        el.remove();
+        emptyCol(col.id === 'col-txt' ? 'text' : (col.id === 'col-image' ? 'image' : 'file'));
+    }
+
+    function copyText(t) {
+        navigator.clipboard.writeText(t).then(function () { toast('已复制'); }).catch(function () { toast('复制失败'); });
+    }
+
+    async function copyImage(url) {
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const type = blob.type || 'image/png';
+            await navigator.clipboard.write([new ClipboardItem({ [type]: blob })]);
+            toast('已复制图片');
+        } catch (e) {
+            try {
+                await navigator.clipboard.writeText(url);
+                toast('已复制图片地址');
+            } catch (e2) {
+                toast('复制失败');
+            }
         }
     }
 
-    function startEdit(id, el, btn) {
-        if (el.isContentEditable) { el.blur(); return; }
-        const original = el.textContent;
-        el.contentEditable = 'true';
-        el.focus();
-        btn.textContent = '保存';
-        let pendingSave = false;
-        const finish = function () {
-            el.contentEditable = 'false';
-            btn.textContent = '编辑';
-            btn.onclick = function () { startEdit(id, el, btn); };
-            const save = pendingSave;
-            pendingSave = false;
-            const content = el.textContent.trim();
-            if (save && content && content !== original) {
-                sendOp({ op: 'update', id: id, content: content });
-            } else if (!save) {
-                el.textContent = original;
-            }
-        };
-        btn.addEventListener('mousedown', function (ev) { ev.preventDefault(); pendingSave = true; });
-        btn.onclick = function () { pendingSave = true; finish(); };
-        el.addEventListener('keydown', function (ev) {
-            if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); pendingSave = true; finish(); }
-            else if (ev.key === 'Escape') { finish(); }
-        });
-        el.addEventListener('blur', finish);
+    function downloadFile(url, name) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name || 'file';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
     }
 
     async function sendOp(payload) {
@@ -237,14 +267,14 @@
         inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
     });
     document.getElementById('btnSend').addEventListener('click', sendText);
-    document.getElementById('btnImage').addEventListener('click', function () { document.getElementById('fileImage').click(); });
-    document.getElementById('btnFile').addEventListener('click', function () { document.getElementById('fileAny').click(); });
-    document.getElementById('fileImage').addEventListener('change', function (e) {
+    document.getElementById('btnImage').addEventListener('click', function () { fileImageEl.click(); });
+    document.getElementById('btnFile').addEventListener('click', function () { fileAnyEl.click(); });
+    fileImageEl.addEventListener('change', function (e) {
         const file = e.target.files[0];
         e.target.value = '';
         if (file) uploadFile(file, 'image');
     });
-    document.getElementById('fileAny').addEventListener('change', function (e) {
+    fileAnyEl.addEventListener('change', function (e) {
         const file = e.target.files[0];
         e.target.value = '';
         if (file) uploadFile(file, 'file');
@@ -275,10 +305,6 @@
         if (n < 1024) return n + ' B';
         if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
         return (n / 1024 / 1024).toFixed(1) + ' MB';
-    }
-
-    function scrollBottom() {
-        msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 
     let toastTimer;
