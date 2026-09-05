@@ -18,16 +18,15 @@
     .dropzone.over { border-color: #4080ff; background: #e8f1ff; color: #4080ff; }
     .col-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
     .empty { text-align: center; color: #c9cdd4; font-size: 13px; margin: 20px 0; }
-    .item { background: #f7f8fa; border-radius: 8px; padding: 8px 10px; }
+    .item { background: #f7f8fa; border-radius: 8px; padding: 8px 10px; position: relative; }
     .item .text { font-size: 14px; color: #1d2129; white-space: pre-wrap; word-break: break-word; }
     .item img { max-width: 100%; max-height: 220px; border-radius: 6px; display: block; cursor: zoom-in; }
     .item .fname { font-size: 13px; color: #1d2129; word-break: break-all; }
     .item .fsize { font-size: 11px; color: #86909c; margin-top: 2px; }
-    .item .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .item .row { display: flex; align-items: flex-start; gap: 8px; padding-right: 64px; }
+    .item .actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
     .item button { border: 1px solid #e3e6ea; background: #fff; border-radius: 6px; padding: 4px; cursor: pointer; color: #4e5969; display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
     .item button svg { display: block; }
-    .item button.txt { line-height: normal; padding: 3px 8px; font-size: 12px; }
     .item button:hover { border-color: #4080ff; color: #4080ff; }
     .item button.del:hover { border-color: #f53f3f; color: #f53f3f; }
     #toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1d2129; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 10; }
@@ -43,14 +42,14 @@
     <section class="col" id="col-txt">
         <div class="col-head">TXT</div>
         <div class="col-input">
-            <textarea id="txtInput" placeholder="输入文字，回车发送"></textarea>
+            <textarea id="txtInput" placeholder="Type text, press Enter to send"></textarea>
         </div>
         <div class="col-body"><div class="empty">暂无</div></div>
     </section>
     <section class="col" id="col-image">
         <div class="col-head">IMAGE</div>
         <div class="dropzone" id="dzImage">
-            <div>点击或拖拽上传图片</div>
+            <div>Click or drag to upload images</div>
             <input type="file" id="fileImage" accept="image/*" multiple style="display:none">
         </div>
         <div class="col-body"><div class="empty">暂无</div></div>
@@ -58,7 +57,7 @@
     <section class="col" id="col-file">
         <div class="col-head">FILE</div>
         <div class="dropzone" id="dzFile">
-            <div>点击或拖拽上传文件</div>
+            <div>Click or drag to upload files</div>
             <input type="file" id="fileAny" multiple style="display:none">
         </div>
         <div class="col-body"><div class="empty">暂无</div></div>
@@ -99,6 +98,7 @@
 
     const ICON_COPY = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-1a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1"/></svg>';
     const ICON_TRASH = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 4h10M6.5 4V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1M5 4l.5 8.5a1 1 0 0 0 1 .9h3a1 1 0 0 0 1-.9L11 4"/></svg>';
+    const ICON_DOWNLOAD = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 2v8"/><path d="M4.5 6.5 8 10l3.5-3.5"/><path d="M3 12.5h10"/></svg>';
 
     function emptyCol(t) {
         if (!cols[t].querySelector('.item')) {
@@ -129,6 +129,7 @@
         const item = document.createElement('div');
         item.className = 'item';
         item.dataset.id = m.id;
+        item.dataset.time = m.createdAt || 0;
 
         const body = document.createElement('div');
         if (m.type === 'text') {
@@ -165,11 +166,7 @@
         } else if (m.type === 'image') {
             actions.appendChild(actionButton(ICON_COPY, '复制', function () { copyImage(m.url); }));
         } else if (m.type === 'file') {
-            const dl = document.createElement('button');
-            dl.className = 'txt';
-            dl.textContent = '下载';
-            dl.addEventListener('click', function () { downloadFile(m.url, m.name); });
-            actions.appendChild(dl);
+            actions.appendChild(actionButton(ICON_DOWNLOAD, '下载', function () { downloadFile(m.url, m.name); }));
         }
         actions.appendChild(delButton(m.id));
         row.appendChild(actions);
@@ -178,6 +175,13 @@
         const empty = col.querySelector('.empty');
         if (empty) empty.remove();
         col.appendChild(item);
+        sortColumn(col);
+    }
+
+    function sortColumn(col) {
+        const items = Array.prototype.slice.call(col.querySelectorAll('.item'));
+        items.sort(function (a, b) { return Number(b.dataset.time) - Number(a.dataset.time); });
+        items.forEach(function (it) { col.appendChild(it); });
     }
 
     function upsert(m) {
