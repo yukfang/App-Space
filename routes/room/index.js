@@ -9,6 +9,15 @@ const store = new RoomStore();
 
 const MAX_TEXT_LENGTH = 100000;
 const FILE_ID_RE = /^[0-9a-f\-]{8,64}$/i;
+const KEY_RE = /^[\p{L}\p{N}_\-.]{1,128}$/u;
+
+function sanitizeKey(k) {
+    if (typeof k !== 'string') return null;
+    const t = k.trim();
+    if (t === '.' || t === '..') return null;
+    if (!KEY_RE.test(t)) return null;
+    return t;
+}
 
 function badRequest(ctx, message) {
     ctx.status = 400;
@@ -63,11 +72,15 @@ async function handleMessages(ctx) {
 
     if (op === 'add') {
         const type = body.type;
+        const key = (body.key === undefined || body.key === null) ? undefined : sanitizeKey(body.key);
+        if (body.key !== undefined && body.key !== null && key === undefined) {
+            return badRequest(ctx, `Invalid key: ${body.key}`);
+        }
         if (type === 'text') {
             const content = typeof body.content === 'string' ? body.content.trim() : '';
             if (!content) return badRequest(ctx, 'Empty text content');
             if (content.length > MAX_TEXT_LENGTH) return badRequest(ctx, `Text too long (max ${MAX_TEXT_LENGTH} chars)`);
-            ctx.body = store.addMessage(name, { type, content, sender });
+            ctx.body = store.addMessage(name, { key, type, content, sender });
             return;
         }
         if (type === 'image' || type === 'file') {
@@ -79,6 +92,7 @@ async function handleMessages(ctx) {
             const fileId = crypto.randomUUID();
             store.saveFile(name, fileId, buffer);
             ctx.body = store.addMessage(name, {
+                key,
                 type,
                 url: `/room/${name}/files/${fileId}`,
                 name: typeof body.name === 'string' ? body.name.slice(0, 255) : 'file',

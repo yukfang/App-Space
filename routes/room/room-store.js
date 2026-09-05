@@ -68,9 +68,19 @@ class RoomStore {
 
     addMessage(name, message) {
         const room = this.getRoom(name);
-        message.id = crypto.randomUUID();
-        message.key = message.id;
-        message.createdAt = Date.now();
+        if (message.key) {
+            const existing = room.messages.find((m) => m.key === message.key);
+            if (existing) {
+                const { key, ...patch } = message;
+                Object.assign(existing, patch, { updatedAt: Date.now() });
+                this.persist(name);
+                this.broadcast(name, 'message', { op: 'update', message: existing });
+                return existing;
+            }
+        }
+        message.id = message.id || crypto.randomUUID();
+        message.key = message.key || message.id;
+        message.createdAt = message.createdAt || Date.now();
         room.messages.push(message);
         this.persist(name);
         this.broadcast(name, 'message', { op: 'add', message });
