@@ -53,7 +53,7 @@ router.get('/:room_name/events', async (ctx) => {
 });
 
 // add / update / delete a message
-router.post('/:room_name/messages', async (ctx) => {
+async function handleMessages(ctx) {
     const name = store.sanitizeRoomName(ctx.params.room_name);
     if (!name) return badRequest(ctx, `Invalid room name: ${ctx.params.room_name}`);
 
@@ -112,6 +112,44 @@ router.post('/:room_name/messages', async (ctx) => {
     }
 
     return badRequest(ctx, `Unsupported op: ${op}`);
+}
+
+router.post('/:room_name/messages', handleMessages);
+router.put('/:room_name/messages', handleMessages);
+
+// list all messages in a room
+router.get('/:room_name/messages', async (ctx) => {
+    const name = store.sanitizeRoomName(ctx.params.room_name);
+    if (!name) return badRequest(ctx, `Invalid room name: ${ctx.params.room_name}`);
+    const room = store.getRoom(name);
+    ctx.body = room.messages;
+});
+
+// get a single message by key
+router.get('/:room_name/messages/:key', async (ctx) => {
+    const name = store.sanitizeRoomName(ctx.params.room_name);
+    if (!name) return badRequest(ctx, `Invalid room name: ${ctx.params.room_name}`);
+    const key = ctx.params.key;
+    const room = store.getRoom(name);
+    const msg = room.messages.find((m) => m.key === key || m.id === key);
+    if (!msg) return notFound(ctx, `Message not found: ${key}`);
+    ctx.body = msg;
+});
+
+// update a single message by key
+router.put('/:room_name/messages/:key', async (ctx) => {
+    const name = store.sanitizeRoomName(ctx.params.room_name);
+    if (!name) return badRequest(ctx, `Invalid room name: ${ctx.params.room_name}`);
+    const key = ctx.params.key;
+    const body = ctx.request.body || {};
+    const content = typeof body.content === 'string' ? body.content.trim() : '';
+    if (!content) return badRequest(ctx, 'content required');
+    if (content.length > MAX_TEXT_LENGTH) return badRequest(ctx, `Text too long (max ${MAX_TEXT_LENGTH} chars)`);
+    const room = store.getRoom(name);
+    const msg = room.messages.find((m) => m.key === key || m.id === key);
+    if (!msg) return notFound(ctx, `Message not found: ${key}`);
+    const updated = store.updateMessage(name, msg.id, { content });
+    ctx.body = updated;
 });
 
 // serve uploaded files

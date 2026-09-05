@@ -35,6 +35,11 @@ class RoomStore {
                 const raw = fs.readFileSync(this.statePath(name), 'utf8');
                 messages = JSON.parse(raw);
             } catch (e) { /* no persisted state */ }
+            if (Array.isArray(messages)) {
+                messages.forEach((m) => {
+                    if (m && !m.key) m.key = m.id;
+                });
+            }
             room = {
                 name,
                 messages: Array.isArray(messages) ? messages : [],
@@ -63,8 +68,9 @@ class RoomStore {
 
     addMessage(name, message) {
         const room = this.getRoom(name);
-        message.id = message.id || crypto.randomUUID();
-        message.createdAt = message.createdAt || Date.now();
+        message.id = crypto.randomUUID();
+        message.key = message.id;
+        message.createdAt = Date.now();
         room.messages.push(message);
         this.persist(name);
         this.broadcast(name, 'message', { op: 'add', message });
