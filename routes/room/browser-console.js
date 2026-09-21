@@ -8,7 +8,7 @@ const putMsg = async (body) => {
   const data = await res.json();
   console.log(res.status, data);
   return data;
-};
+}; 
 
 // 示例：指定 key 创建/更新
 await putMsg({ op: 'add', type: 'text', content: 'hello', key: 'tokenx' });

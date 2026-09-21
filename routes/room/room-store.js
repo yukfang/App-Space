@@ -5,7 +5,7 @@ const { STORAGE_PATH } = require('../constants');
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const ROOM_NAME_RE = /^[\p{L}\p{N}_\- ]{1,128}$/u;
-
+ 
 class RoomStore {
     constructor() {
         this.rooms = new Map();

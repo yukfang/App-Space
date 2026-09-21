@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { RoomStore, MAX_FILE_BYTES } = require('./room-store');
-
+ 
 const router = new Router({ prefix: '/room' });
 const store = new RoomStore();
 
