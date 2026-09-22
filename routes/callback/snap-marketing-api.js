@@ -1,5 +1,6 @@
 const axios = require('axios');
 const mysql = require('mysql2/promise');
+const { normalizeMysql2Ssl } = require('../../utils/api-auth-db-config');
 
 const dbconfig = JSON.parse(process.env.SNAP_MKT_API_DB_CFG || '{"host":"localhost","port":3306,"user":"root","password":"","database":"app_space"}');
 
@@ -9,6 +10,7 @@ const pool = mysql.createPool({
     user: dbconfig.user,
     password: dbconfig.password,
     database: dbconfig.database,
+    ssl: normalizeMysql2Ssl(dbconfig.ssl),
     connectionLimit: 10,
 });
 

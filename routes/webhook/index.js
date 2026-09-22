@@ -1,5 +1,6 @@
 const Router = require('koa-router');
 const mysql = require('mysql2/promise');
+const { normalizeMysql2Ssl } = require('../../utils/api-auth-db-config');
 const router = new Router({ prefix: '/webhook' });
 
 const dbconfig = JSON.parse(process.env.WEBHOOK_DB_CFG)
@@ -15,7 +16,7 @@ const mysqlconfig = {
     user: dbconfig.user,
     password: dbconfig.password,
     database: dbconfig.database,
-    ssl: dbconfig.ssl,
+    ssl: normalizeMysql2Ssl(dbconfig.ssl),
     connectionLimit: 10,
 }
 // console.log(mysqlconfig)
