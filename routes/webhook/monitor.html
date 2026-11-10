@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webhook Monitor</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #1d2129; height: 100vh; display: flex; flex-direction: column; }
+    header { background: #fff; padding: 12px 16px; border-bottom: 1px solid #e3e6ea; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+    header h1 { font-size: 15px; font-weight: 700; }
+    .url { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: #f7f8fa; border: 1px solid #e3e6ea; border-radius: 6px; padding: 4px 8px; cursor: pointer; word-break: break-all; }
+    .url:hover { border-color: #4080ff; }
+    .meta { font-size: 12px; color: #86909c; }
+    .status { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #f2f3f5; color: #86909c; }
+    .status.on { background: #e8ffea; color: #00b42a; }
+    .status.off { background: #fff7e8; color: #ff7d00; }
+    #list { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .empty { text-align: center; color: #86909c; font-size: 13px; margin-top: 40px; line-height: 1.8; }
+    .empty code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff; border: 1px solid #e3e6ea; border-radius: 4px; padding: 2px 6px; }
+    .rec { background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.06); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    .rec.new { animation: flash 1.2s ease-out; }
+    @keyframes flash { from { background: #e8f1ff; } to { background: #fff; } }
+    .line { display: flex; gap: 10px; align-items: center; padding: 7px 10px; cursor: pointer; white-space: nowrap; min-width: 0; }
+    .line > span { flex-shrink: 0; }
+    .time { color: #86909c; }
+    .method { font-weight: 700; width: 52px; }
+    .method.GET { color: #00b42a; } .method.POST { color: #4080ff; } .method.PUT { color: #ff7d00; } .method.DELETE { color: #f53f3f; } .method.PATCH { color: #722ed1; }
+    .code { color: #00b42a; }
+    .path { color: #1d2129; font-weight: 600; }
+    .rest { flex: 1 !important; flex-shrink: 1 !important; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #4e5969; }
+    .rest b { color: #86909c; font-weight: 400; }
+    .detail { display: none; border-top: 1px solid #e3e6ea; padding: 10px; }
+    .rec.open .detail { display: block; }
+    .detail h3 { font-size: 11px; color: #86909c; font-weight: 600; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .detail h3:first-child { margin-top: 0; }
+    .detail pre { background: #f7f8fa; border-radius: 6px; padding: 8px; white-space: pre-wrap; word-break: break-all; max-height: 360px; overflow: auto; }
+    #toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1d2129; color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 10; }
+</style>
+</head>
+<body>
+<header>
+    <h1>Webhook Monitor</h1>
+    <span class="url" id="url" title="点击复制"></span>
+    <span class="meta" id="meta"></span>
+    <span class="status" id="status">连接中…</span>
+</header>
+<div id="list"></div>
+<div id="toast"></div>
+<script>
+(function () {
+    const params = new URLSearchParams(location.search);
+    const limit = Math.max(1, Math.min(100, parseInt(params.get('logstream'), 10) || 5));
+    const webhookUrl = location.origin + location.pathname;
+    const listEl = document.getElementById('list');
+    const statusEl = document.getElementById('status');
+    const urlEl = document.getElementById('url');
+    const toastEl = document.getElementById('toast');
+
+    urlEl.textContent = webhookUrl;
+    document.getElementById('meta').textContent = '显示最新 ' + limit + ' 条，点击记录展开详情';
+    urlEl.addEventListener('click', function () {
+        navigator.clipboard.writeText(webhookUrl).then(function () { toast('已复制 Webhook URL'); });
+    });
+
+    function showEmpty() {
+        listEl.innerHTML = '';
+        const el = document.createElement('div');
+        el.className = 'empty';
+        el.innerHTML = '等待请求…<br>向下面的地址发送任意请求即可在此看到记录：<br>';
+        const code = document.createElement('code');
+        code.textContent = "curl -X POST '" + webhookUrl + "' -H 'Content-Type: application/json' -d '{\"hello\":\"world\"}'";
+        el.appendChild(code);
+        listEl.appendChild(el);
+    }
+
+    function pad(n, w) { return String(n).padStart(w || 2, '0'); }
+    function formatTime(ms) {
+        const d = new Date(ms);
+        return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) + '.' + pad(d.getMilliseconds(), 3);
+    }
+    function pretty(text) {
+        if (!text) return '(empty)';
+        try { return JSON.stringify(JSON.parse(text), null, 2); } catch (e) { return text; }
+    }
+    function oneLine(text) {
+        if (!text) return '';
+        try { return JSON.stringify(JSON.parse(text)); } catch (e) { return text.replace(/\s+/g, ' '); }
+    }
+    function span(cls, text) {
+        const s = document.createElement('span');
+        s.className = cls;
+        s.textContent = text;
+        return s;
+    }
+    function labelled(parent, label, text) {
+        const b = document.createElement('b');
+        b.textContent = label + '=';
+        parent.appendChild(b);
+        parent.appendChild(document.createTextNode(text + '  '));
+    }
+    function section(parent, title, text) {
+        const h = document.createElement('h3');
+        h.textContent = title;
+        const pre = document.createElement('pre');
+        pre.textContent = text;
+        parent.appendChild(h);
+        parent.appendChild(pre);
+    }
+
+    function addRecord(r, isNew) {
+        const empty = listEl.querySelector('.empty');
+        if (empty) empty.remove();
+
+        const rec = document.createElement('div');
+        rec.className = 'rec' + (isNew ? ' new' : '');
+
+        const line = document.createElement('div');
+        line.className = 'line';
+        line.appendChild(span('time', formatTime(r.time)));
+        line.appendChild(span('method ' + r.method, r.method));
+        line.appendChild(span('code', String(r.response.status)));
+        line.appendChild(span('path', r.path + (r.query ? '?' + r.query : '')));
+        const rest = document.createElement('span');
+        rest.className = 'rest';
+        labelled(rest, 'body', oneLine(r.body) || '(empty)');
+        labelled(rest, 'headers', JSON.stringify(r.headers));
+        labelled(rest, 'response', JSON.stringify(r.response.body));
+        line.appendChild(rest);
+        line.addEventListener('click', function () { rec.classList.toggle('open'); });
+
+        const detail = document.createElement('div');
+        detail.className = 'detail';
+        section(detail, 'Request', r.method + ' ' + r.path + (r.query ? '?' + r.query : '') + '\nFrom: ' + r.ip + '\nTime: ' + new Date(r.time).toISOString());
+        section(detail, 'Headers', JSON.stringify(r.headers, null, 2));
+        section(detail, 'Body', pretty(r.body));
+        section(detail, 'Response', r.response.status + '\n' + JSON.stringify(r.response.body, null, 2));
+
+        rec.appendChild(line);
+        rec.appendChild(detail);
+        listEl.insertBefore(rec, listEl.firstChild);
+        while (listEl.children.length > limit) listEl.removeChild(listEl.lastChild);
+    }
+
+    function connect() {
+        const es = new EventSource(location.pathname + '?logstream=' + limit);
+        es.onopen = function () { statusEl.textContent = '实时监听中'; statusEl.className = 'status on'; };
+        es.onerror = function () { statusEl.textContent = '重连中…'; statusEl.className = 'status off'; };
+        es.addEventListener('snapshot', function (e) {
+            const list = JSON.parse(e.data);
+            showEmpty();
+            list.forEach(function (r) { addRecord(r, false); });
+        });
+        es.addEventListener('record', function (e) { addRecord(JSON.parse(e.data), true); });
+        window.addEventListener('beforeunload', function () { es.close(); });
+    }
+
+    let toastTimer;
+    function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.style.display = 'none'; }, 2000);
+    }
+
+    showEmpty();
+    connect();
+})();
+</script>
+</body>
+</html>

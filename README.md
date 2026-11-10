@@ -29,6 +29,8 @@
 - Webhook
   - [routes/webhook/index.js](file:///Users/yukfang/yuk-fang-ws/App-Space/routes/webhook/index.js)
   - `ALL /webhook/tts/:shop_id`：接收 TikTok Shop Webhook，读取请求体并插入 MySQL 表 `webhook_messages`（需事先建表）。
+  - `ALL /webhook/<任意路径>`：通用 Webhook，接受任意方法/内容并返回 `{"ok":true,"id":N}`；请求记录（headers、path、query、body、response）保存在内存中，每个路径最多 200 条，重启即清空。
+  - `GET /webhook/<同一路径>?logstream=5`：在浏览器打开监控页，实时滚动显示该路径最新 5 条记录（最多 100）。
 - 授权与令牌
   - `GET /auth/tts/:app_key`：跳转 TikTok 授权页（`tts_app.auth_url` 为空则用默认 `https://auth.tiktok-shops.com/oauth/authorize`）；`?format=json` 仅返回授权 URL。
   - `GET /callback/tt4s?app_key=&code=&locale=&shop_region=`：换 token，写入 `tts_shop` / `tts_shop_app_token`，再调 Get Authorized Shops 同步店铺。

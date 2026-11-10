@@ -1,6 +1,7 @@
 const Router = require('koa-router');
 const mysql = require('mysql2/promise');
 const { normalizeMysql2Ssl } = require('../../utils/api-auth-db-config');
+const { handleGenericWebhook } = require('./generic');
 const router = new Router({ prefix: '/webhook' });
 
 const dbconfig = JSON.parse(process.env.WEBHOOK_DB_CFG)
@@ -74,6 +75,9 @@ router.all('/tts/:shop_id', async (ctx) => {
         // console.log(rows);
     }
 });
+
+// must stay after the specific routes above
+router.all('(.*)', handleGenericWebhook);
 
 
 
