@@ -1,0 +1,31 @@
+---
+description: Code, comments, and user-facing strings must be written in English only
+alwaysApply: true
+---
+
+# English only in code
+
+Everything inside source files is written in English:
+
+- Code identifiers, comments, JSDoc
+- User-facing text: HTML pages, toasts, button titles, error messages, labels
+- Log messages and API error bodies
+- `lang` attribute on HTML pages: `lang="en"`
+
+Prefer plain ASCII punctuation in code: `...` not `…`, `-` not `—`, `(` `)` and `:` not full-width `（` `）` `：`.
+
+```js
+// BAD
+toast('已复制');
+// 获取用户信息
+
+// GOOD
+toast('Copied');
+// fetch user info
+```
+
+Exceptions (may contain other languages):
+
+- `README.md` and other docs
+- Sample data / fixtures (e.g. `routes/webhook/summary1.json`)
+- Values that come from external systems and must match them exactly

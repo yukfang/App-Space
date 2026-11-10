@@ -1,10 +1,10 @@
-// db: 用来存 API Token
+// db: stores API tokens
 datasource db {
   provider = "mysql"
 }
 
 
-// 为 db 生成 Client
+// Prisma Client for db
 generator clientdb {
   provider   = "prisma-client-js"
   output     = "./generated/clientdb"

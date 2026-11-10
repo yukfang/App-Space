@@ -16,7 +16,7 @@ const ACCESS_TOKEN_REFRESH_BUFFER_SEC = 3600 * 25;
 
 const router = new Router({ prefix: `/tokens/tts` });
 
-/** GET /tokens/tts/:shop_id/:app_key — token for (shop, app) authorization */
+/** GET /tokens/tts/:shop_id/:app_key - token for (shop, app) authorization */
 router.get('/:shop_id/:app_key', async (ctx) => {
     const shop_id = String(ctx.params.shop_id);
     const app_key = ctx.params.app_key;

@@ -25,7 +25,7 @@ function parseLogstream(value) {
 
 function truncate(text) {
     if (text.length <= MAX_STORED_BODY_CHARS) return text;
-    return text.slice(0, MAX_STORED_BODY_CHARS) + `…[truncated, ${text.length} chars total]`;
+    return text.slice(0, MAX_STORED_BODY_CHARS) + `...[truncated, ${text.length} chars total]`;
 }
 
 // koa-bodyparser only consumes json/form bodies; read anything else from the stream.
@@ -42,7 +42,7 @@ function readRawBody(ctx) {
         });
         req.on('end', () => {
             const text = Buffer.concat(chunks).toString('utf8');
-            resolve(size > MAX_BODY_BYTES ? `${text}…[truncated, ${size} bytes total]` : text);
+            resolve(size > MAX_BODY_BYTES ? `${text}...[truncated, ${size} bytes total]` : text);
         });
         req.on('error', reject);
     });

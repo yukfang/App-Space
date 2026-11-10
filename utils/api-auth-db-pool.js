@@ -6,7 +6,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 let pool;
 
-/** Shared MySQL pool for API auth tables (tts_*, snap_*, …) via API_AUTH_DB. */
+/** Shared MySQL pool for API auth tables (tts_*, snap_*, ...) via API_AUTH_DB. */
 function getApiAuthDbPool() {
     if (!pool) {
         const connectionString = process.env.API_AUTH_DB;

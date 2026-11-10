@@ -1,15 +1,15 @@
 const MAX_DETAIL_LENGTH = 2400;
 
 const STEP_LABELS = {
-    callback_params: '回调参数校验',
-    app_lookup: '读取应用配置',
-    token_exchange: '向 TikTok 换取访问凭证',
-    sync_shops: '同步店铺并保存授权',
-    unhandled: '未预期的程序错误',
+    callback_params: 'Validate callback parameters',
+    app_lookup: 'Load app configuration',
+    token_exchange: 'Exchange auth code for TikTok access token',
+    sync_shops: 'Sync shops and save authorization',
+    unhandled: 'Unexpected error',
 };
 
 function stepLabel(step) {
-    return STEP_LABELS[step] || step || '未知步骤';
+    return STEP_LABELS[step] || step || 'Unknown step';
 }
 
 function safeJson(value) {
@@ -35,36 +35,36 @@ function redactSecrets(text) {
  */
 function formatErrorDetail(err, step) {
     const lines = [];
-    lines.push(`失败步骤：${stepLabel(step)}`);
+    lines.push(`Failed step: ${stepLabel(step)}`);
 
     if (err == null) {
         return truncateDetail(lines.join('\n'));
     }
 
     if (typeof err === 'string') {
-        lines.push(`说明：${err}`);
+        lines.push(`Note: ${err}`);
         return truncateDetail(redactSecrets(lines.join('\n')));
     }
 
     if (err.message) {
-        lines.push(`错误消息：${err.message}`);
+        lines.push(`Error message: ${err.message}`);
     }
     if (err.code) {
-        lines.push(`错误代码：${err.code}`);
+        lines.push(`Error code: ${err.code}`);
     }
 
     const response = err.response;
     if (response) {
-        lines.push(`HTTP 状态：${response.status}`);
+        lines.push(`HTTP status: ${response.status}`);
         if (response.data !== undefined) {
             const body = typeof response.data === 'string' ? response.data : safeJson(response.data);
-            lines.push(`接口返回：${redactSecrets(body)}`);
+            lines.push(`API response: ${redactSecrets(body)}`);
         }
     }
 
     if (err.stack) {
         const stackLines = err.stack.split('\n').slice(0, 12);
-        lines.push('堆栈（节选）：');
+        lines.push('Stack (excerpt):');
         lines.push(...stackLines.map((line) => `  ${line.trim()}`));
     }
 
@@ -75,7 +75,7 @@ function truncateDetail(text) {
     if (text.length <= MAX_DETAIL_LENGTH) {
         return text;
     }
-    return `${text.slice(0, MAX_DETAIL_LENGTH)}\n…（内容已截断）`;
+    return `${text.slice(0, MAX_DETAIL_LENGTH)}\n...(truncated)`;
 }
 
 function buildFailureParams(oauthContext, { app_key, step, reason, err, detail }) {

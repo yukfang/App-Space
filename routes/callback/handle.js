@@ -14,19 +14,17 @@ router.get('/:path*', async (ctx) => {
         ctx.body = { error: `Prohibited: /callback` };
         return
     } else {
-        const pathSegments = fullPath.split('/') // 可选：将路径分割成段数组
+        const pathSegments = fullPath.split('/')
 
-        // 检查是否是 Snapchat Marketing API 回调
+        // Snapchat Marketing API callback
         if (pathSegments[0]?.startsWith('snapchat-marketing-api-')) {
             await handleSnapchatCallback(ctx);
             return;
         }
 
-        // 从HTTP请求中读取查询字符串参数
-        // 例如：/?app_key=6h92uttbf7u18&code=&locale=en&shop_region=MY
+        // e.g. /?app_key=6h92uttbf7u18&code=&locale=en&shop_region=MY
         const queryParams = ctx.query;
 
-        // 读取具体的查询参数
         const grant_type = 'authorized_code';
         const app_key = queryParams.app_key 
         const auth_code = queryParams.code
@@ -38,7 +36,7 @@ router.get('/:path*', async (ctx) => {
                 {
                     app_key: app_key || '',
                     step: 'callback_params',
-                    reason: '回调缺少必要参数',
+                    reason: 'Callback is missing required parameters',
                     detail: `app_key=${app_key}, code=${auth_code ? '[present]' : '[missing]'}, locale=${locale}, shop_region=${shop_region}`,
                 }
             ));
@@ -61,7 +59,7 @@ router.get('/:path*', async (ctx) => {
                     {
                         app_key,
                         step: 'unhandled',
-                        reason: '授权过程发生未预期错误',
+                        reason: 'Unexpected error during authorization',
                         err,
                     }
                 ));

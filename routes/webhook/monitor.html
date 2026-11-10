@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,9 +41,9 @@
 <body>
 <header>
     <h1>Webhook Monitor</h1>
-    <span class="url" id="url" title="点击复制"></span>
+    <span class="url" id="url" title="Click to copy"></span>
     <span class="meta" id="meta"></span>
-    <span class="status" id="status">连接中…</span>
+    <span class="status" id="status">Connecting...</span>
 </header>
 <div id="list"></div>
 <div id="toast"></div>
@@ -58,16 +58,16 @@
     const toastEl = document.getElementById('toast');
 
     urlEl.textContent = webhookUrl;
-    document.getElementById('meta').textContent = '显示最新 ' + limit + ' 条，点击记录展开详情';
+    document.getElementById('meta').textContent = 'Showing latest ' + limit + ', click a record to expand';
     urlEl.addEventListener('click', function () {
-        navigator.clipboard.writeText(webhookUrl).then(function () { toast('已复制 Webhook URL'); });
+        navigator.clipboard.writeText(webhookUrl).then(function () { toast('Webhook URL copied'); });
     });
 
     function showEmpty() {
         listEl.innerHTML = '';
         const el = document.createElement('div');
         el.className = 'empty';
-        el.innerHTML = '等待请求…<br>向下面的地址发送任意请求即可在此看到记录：<br>';
+        el.innerHTML = 'Waiting for requests...<br>Send any request to this URL and it will appear here:<br>';
         const code = document.createElement('code');
         code.textContent = "curl -X POST '" + webhookUrl + "' -H 'Content-Type: application/json' -d '{\"hello\":\"world\"}'";
         el.appendChild(code);
@@ -144,8 +144,8 @@
 
     function connect() {
         const es = new EventSource(location.pathname + '?logstream=' + limit);
-        es.onopen = function () { statusEl.textContent = '实时监听中'; statusEl.className = 'status on'; };
-        es.onerror = function () { statusEl.textContent = '重连中…'; statusEl.className = 'status off'; };
+        es.onopen = function () { statusEl.textContent = 'Live'; statusEl.className = 'status on'; };
+        es.onerror = function () { statusEl.textContent = 'Reconnecting...'; statusEl.className = 'status off'; };
         es.addEventListener('snapshot', function (e) {
             const list = JSON.parse(e.data);
             showEmpty();

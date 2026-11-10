@@ -6,7 +6,7 @@ const router = new Router({ prefix: '/login' });
 const keyPath = path.join(__dirname, 'id_proxyuser.key');
 const key = fs.readFileSync(keyPath, 'utf8');
 
-// 模拟数据库用户表
+// mock user table
 const USERS = {
     "xinxin@XinXin2025" : {
         name: "XinXin",

@@ -8,7 +8,7 @@ function escapeHtml(value) {
 
 function layout({ title, bodyClass, content }) {
     return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -104,14 +104,14 @@ function layout({ title, bodyClass, content }) {
 }
 
 const REGION_LABELS = {
-    US: '美国',
-    GB: '英国',
-    MY: '马来西亚',
-    SG: '新加坡',
-    TH: '泰国',
-    VN: '越南',
-    PH: '菲律宾',
-    ID: '印度尼西亚',
+    US: 'United States',
+    GB: 'United Kingdom',
+    MY: 'Malaysia',
+    SG: 'Singapore',
+    TH: 'Thailand',
+    VN: 'Vietnam',
+    PH: 'Philippines',
+    ID: 'Indonesia',
 };
 
 function regionLabel(code) {
@@ -119,7 +119,7 @@ function regionLabel(code) {
         return '';
     }
     const key = String(code).toUpperCase();
-    return REGION_LABELS[key] ? `${REGION_LABELS[key]}（${key}）` : key;
+    return REGION_LABELS[key] ? `${REGION_LABELS[key]} (${key})` : key;
 }
 
 function renderSuccessPage({ app, shops }) {
@@ -127,7 +127,7 @@ function renderSuccessPage({ app, shops }) {
 
     const shopItems = (shops || [])
         .map((shop) => {
-            const name = shop.name?.trim() || '店铺';
+            const name = shop.name?.trim() || 'Shop';
             const region = regionLabel(shop.region);
             const meta = region ? `<div class="shop-meta">${escapeHtml(region)}</div>` : '';
             return `<li>${escapeHtml(name)}${meta}</li>`;
@@ -136,32 +136,32 @@ function renderSuccessPage({ app, shops }) {
 
     const shopsBlock = shops?.length
         ? `<ul class="shop-list">${shopItems}</ul>`
-        : `<p class="lead">授权已完成。如您在系统中看不到店铺，请联系技术支持。</p>`;
+        : `<p class="lead">Authorization is complete. If you don't see your shop in the system, please contact support.</p>`;
 
     const content = `
-      <div class="badge">✓ 授权成功</div>
-      <h1>您的店铺已成功授权</h1>
-      <p class="lead">${escapeHtml(appLabel)} 已与您的 TikTok Shop 店铺建立连接。</p>
-      ${shops?.length ? '<p class="lead">已连接的店铺：</p>' : ''}
+      <div class="badge">&#10003; Authorized</div>
+      <h1>Your shop has been authorized</h1>
+      <p class="lead">${escapeHtml(appLabel)} is now connected to your TikTok Shop.</p>
+      ${shops?.length ? '<p class="lead">Connected shops:</p>' : ''}
       ${shopsBlock}
-      <p class="lead" style="margin-top:24px;margin-bottom:0;">您可以关闭此页面。</p>
+      <p class="lead" style="margin-top:24px;margin-bottom:0;">You can close this page.</p>
     `;
 
-    return layout({ title: '授权成功', bodyClass: 'ok', content });
+    return layout({ title: 'Authorization successful', bodyClass: 'ok', content });
 }
 
 function userFacingFailureMessage(reason) {
     const r = String(reason || '').toLowerCase();
-    if (r.includes('token exchange') || r.includes('验证')) {
-        return '与 TikTok 完成验证时出现问题，请稍后重新尝试授权。';
+    if (r.includes('token exchange')) {
+        return 'Something went wrong while verifying with TikTok. Please try authorizing again later.';
     }
-    if (r.includes('persist') || r.includes('save') || r.includes('保存')) {
-        return '授权过程未完成，请重新尝试；若多次失败请联系技术支持。';
+    if (r.includes('persist') || r.includes('save')) {
+        return 'Authorization did not finish. Please try again, and contact support if it keeps failing.';
     }
     if (r.includes('not found')) {
-        return '应用配置有误，请联系技术支持后再试。';
+        return 'The app is misconfigured. Please contact support before trying again.';
     }
-    return '授权未能完成，请重新尝试或联系技术支持。';
+    return 'Authorization could not be completed. Please try again or contact support.';
 }
 
 const { stepLabel } = require('./tts-oauth-error');
@@ -170,33 +170,33 @@ function renderFailurePage({ reason, step, detail, at, locale, shop_region, auth
     const userMessage = userFacingFailureMessage(reason);
 
     const debugLines = [
-        `时间：${at || new Date().toISOString()}`,
-        app_key ? `应用编号：${app_key}` : null,
-        shop_region ? `店铺区域：${shop_region}` : null,
-        locale ? `语言：${locale}` : null,
-        step ? `失败步骤：${stepLabel(step)}` : null,
-        reason ? `摘要：${reason}` : null,
-        detail ? `\n--- 详细错误信息 ---\n${detail}` : null,
+        `Time: ${at || new Date().toISOString()}`,
+        app_key ? `App key: ${app_key}` : null,
+        shop_region ? `Shop region: ${shop_region}` : null,
+        locale ? `Locale: ${locale}` : null,
+        step ? `Failed step: ${stepLabel(step)}` : null,
+        reason ? `Summary: ${reason}` : null,
+        detail ? `\n--- Error details ---\n${detail}` : null,
     ];
 
     const debugText = debugLines.filter(Boolean).join('\n');
 
     const reauth = app_key && authBaseUrl
-        ? `<a class="btn btn-primary" href="${escapeHtml(authBaseUrl)}/auth/tts/${escapeHtml(app_key)}">重新授权</a>`
+        ? `<a class="btn btn-primary" href="${escapeHtml(authBaseUrl)}/auth/tts/${escapeHtml(app_key)}">Authorize again</a>`
         : '';
 
     const content = `
-      <div class="badge">授权未成功</div>
-      <h1>未能完成店铺授权</h1>
+      <div class="badge">Authorization failed</div>
+      <h1>We couldn't authorize your shop</h1>
       <p class="lead">${escapeHtml(userMessage)}</p>
       <div class="debug">
-        <h2>如需联系技术支持，请提供以下信息（可截图或复制全文）：</h2>
+        <h2>If you contact support, please include the information below (a screenshot or the copied text):</h2>
         <pre>${escapeHtml(debugText)}</pre>
       </div>
       <div class="actions">${reauth}</div>
     `;
 
-    return layout({ title: '授权未成功', bodyClass: 'err', content });
+    return layout({ title: 'Authorization failed', bodyClass: 'err', content });
 }
 
 module.exports = {

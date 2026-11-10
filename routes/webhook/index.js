@@ -10,7 +10,7 @@ const seller_ids = [
     '123'
 ]
 
-// ✅ 全局唯一 pool（进程启动时创建）
+// single shared pool, created at process start
 const mysqlconfig = {
     host: dbconfig.host,
     port: Number(dbconfig.port || 3306),

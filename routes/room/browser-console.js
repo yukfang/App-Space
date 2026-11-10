@@ -1,4 +1,4 @@
-// 发送一条文本消息（指定 key=name，已存在则更新）
+// send a text message (with key=name it updates the existing one)
 const putMsg = async (body) => {
   const res = await fetch('https://app-space.okiedokie.work/room/0/messages', {
     method: 'PUT',
@@ -10,13 +10,13 @@ const putMsg = async (body) => {
   return data;
 }; 
 
-// 示例：指定 key 创建/更新
+// example: create/update with an explicit key
 await putMsg({ op: 'add', type: 'text', content: 'hello', key: 'tokenx' });
 
-// 示例：不指定 key，服务端自动生成
+// example: no key, the server generates one
 await putMsg({ op: 'add', type: 'text', content: 'no key' });
 
-// 按 key 更新
+// update by key
 await putMsg({ key: 'tokenx' }).then(async (m) => {
   const res = await fetch(`https://app-space.okiedokie.work/room/0/messages/${m.key}`, {
     method: 'PUT',
@@ -26,7 +26,7 @@ await putMsg({ key: 'tokenx' }).then(async (m) => {
   console.log(res.status, await res.json());
 });
 
-// 按 key 查询
+// get by key
 const getByKey = async (key) => {
   const res = await fetch(`https://app-space.okiedokie.work/room/0/messages/${key}`);
   console.log(res.status, await res.json());

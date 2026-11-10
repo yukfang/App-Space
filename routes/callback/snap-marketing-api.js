@@ -66,7 +66,7 @@ async function handleCallback(ctx) {
         const authResult = response.data;
         const access_token = authResult.access_token;
 
-        // 调用 /v1/me 获取用户信息
+        // fetch user info from /v1/me
         let userInfo = {};
         try {
             const meResponse = await axios.get(
@@ -86,7 +86,7 @@ async function handleCallback(ctx) {
                 };
             }
         } catch (meError) {
-            // 如果获取用户信息失败，继续保存凭证，不影响主流程
+            // user info is optional; still save the credential
         }
 
         await saveCredential(cleanClientId, authResult, userInfo);
@@ -129,7 +129,6 @@ async function saveCredential(client_id, authResult, userInfo = {}) {
     
     const token_responses = JSON.stringify(authResult);
     
-    // 构造 description 字段
     const description = JSON.stringify(userInfo);
     
     await pool.query(

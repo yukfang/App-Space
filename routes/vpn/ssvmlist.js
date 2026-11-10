@@ -4,16 +4,16 @@ const router = new Router({ prefix: '/ssvmlist' });
 const delayms = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Sample: 
-// STATUS=剩余流量：695.63GB.♥.到期时间：2025-11-14
-// REMARKS=少数人
+// STATUS=Remaining traffic: 695.63GB. Expires: 2025-11-14
+// REMARKS=<group name>
 // ssr://wYXJhbT1NalF5TlRBNk4zRTJTSEY0VnpOeldBJnJlbWFya3M9NmFhWjVyaXZNREV0U1VWUVRDM2xnSTNuam9jeExqQSZncm91cD01YkNSNXBXdzVMcTY
 
 const REMARKS = {
-    "subs_yuning": "Dev环境",
-    "subs_luo"   : "罗总",
-    "subs_wangyi": "王益",
-    "subs_lizong": "李总",
-    "subs_yumeng": "雨梦",
+    "subs_yuning": "Dev env",
+    "subs_luo"   : "Mr. Luo",
+    "subs_wangyi": "Wang Yi",
+    "subs_lizong": "Mr. Li",
+    "subs_yumeng": "Yu Meng",
 }
 
 router.get('/:key', async (ctx) => {

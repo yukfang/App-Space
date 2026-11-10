@@ -20,7 +20,7 @@ async function sendAccessTokenReq(app_key, _grant_type, auth_code, oauthContext 
             app_key,
             step: 'app_lookup',
             reason: 'Auth Failed: App Info Not Found',
-            detail: `在 tts_app 中未找到 app_key=${app_key}`,
+            detail: `app_key=${app_key} not found in tts_app`,
         });
         return {
             code: 1,

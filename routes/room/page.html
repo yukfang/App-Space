@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>  
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,7 +52,7 @@
         <div class="col-input">
             <textarea id="txtInput" placeholder="Type text, press Enter to send"></textarea>
         </div>
-        <div class="col-body"><div class="empty">暂无</div></div>
+        <div class="col-body"><div class="empty">Empty</div></div>
         <div class="fixed-key">
             <input id="staticKey" placeholder="key" autocomplete="off" spellcheck="false">
             <textarea id="staticValue" placeholder="value"></textarea>
@@ -65,7 +65,7 @@
             <div>Click or drag to upload images</div>
             <input type="file" id="fileImage" accept="image/*" multiple style="display:none">
         </div>
-        <div class="col-body"><div class="empty">暂无</div></div>
+        <div class="col-body"><div class="empty">Empty</div></div>
     </section>
     <section class="col" id="col-file">
         <div class="col-head">FILE</div>
@@ -73,7 +73,7 @@
             <div>Click or drag to upload files</div>
             <input type="file" id="fileAny" multiple style="display:none">
         </div>
-        <div class="col-body"><div class="empty">暂无</div></div>
+        <div class="col-body"><div class="empty">Empty</div></div>
     </section>
 </div>
 <div id="toast"></div>
@@ -100,7 +100,7 @@
         es.addEventListener('snapshot', function (e) {
             const messages = JSON.parse(e.data);
             Object.keys(cols).forEach(function (t) {
-                cols[t].innerHTML = '<div class="empty">暂无</div>';
+                cols[t].innerHTML = '<div class="empty">Empty</div>';
             });
             messages.forEach(render);
         });
@@ -117,7 +117,7 @@
 
     function emptyCol(t) {
         if (!cols[t].querySelector('.item')) {
-            cols[t].innerHTML = '<div class="empty">暂无</div>';
+            cols[t].innerHTML = '<div class="empty">Empty</div>';
         }
     }
 
@@ -131,7 +131,7 @@
     }
 
     function delButton(id) {
-        return iconButton(ICON_TRASH, '删除', function () { sendOp({ op: 'delete', id: id }); }, true);
+        return iconButton(ICON_TRASH, 'Delete', function () { sendOp({ op: 'delete', id: id }); }, true);
     }
 
     function actionButton(icon, title, handler) {
@@ -185,14 +185,14 @@
         const actions = document.createElement('div');
         actions.className = 'actions';
         if (m.type === 'text') {
-            actions.appendChild(actionButton(ICON_COPY, '复制', function () {
+            actions.appendChild(actionButton(ICON_COPY, 'Copy', function () {
                 const textEl = item.querySelector('.text');
                 copyText(textEl ? textEl.textContent : m.content);
             }));
         } else if (m.type === 'image') {
-            actions.appendChild(actionButton(ICON_COPY, '复制', function () { copyImage(m.url); }));
+            actions.appendChild(actionButton(ICON_COPY, 'Copy', function () { copyImage(m.url); }));
         } else if (m.type === 'file') {
-            actions.appendChild(actionButton(ICON_DOWNLOAD, '下载', function () { downloadFile(m.url, m.name); }));
+            actions.appendChild(actionButton(ICON_DOWNLOAD, 'Download', function () { downloadFile(m.url, m.name); }));
         }
         actions.appendChild(delButton(m.id));
         row.appendChild(actions);
@@ -231,7 +231,7 @@
     }
 
     function copyText(t) {
-        navigator.clipboard.writeText(t).then(function () { toast('已复制'); }).catch(function () { toast('复制失败'); });
+        navigator.clipboard.writeText(t).then(function () { toast('Copied'); }).catch(function () { toast('Copy failed'); });
     }
 
     async function copyImage(url) {
@@ -240,13 +240,13 @@
             const blob = await res.blob();
             const type = blob.type || 'image/png';
             await navigator.clipboard.write([new ClipboardItem({ [type]: blob })]);
-            toast('已复制图片');
+            toast('Image copied');
         } catch (e) {
             try {
                 await navigator.clipboard.writeText(url);
-                toast('已复制图片地址');
+                toast('Image URL copied');
             } catch (e2) {
-                toast('复制失败');
+                toast('Copy failed');
             }
         }
     }
@@ -270,12 +270,12 @@
             });
             if (!res.ok) {
                 const data = await res.json().catch(function () { return {}; });
-                toast(data.error || '操作失败');
+                toast(data.error || 'Request failed');
                 return false;
             }
             return true;
         } catch (e) {
-            toast('网络错误');
+            toast('Network error');
             return false;
         }
     }
@@ -283,11 +283,11 @@
     async function createStatic() {
         const key = staticKeyEl.value.trim();
         const content = staticValueEl.value.trim();
-        if (!key || !content) { toast('请填写 key 和 value'); return; }
+        if (!key || !content) { toast('Please fill in key and value'); return; }
         const ok = await sendOp({ op: 'add', type: 'text', content: content, key: key });
         if (!ok) return;
         staticValueEl.value = '';
-        toast('已保存，GET /room/' + roomName + '/messages/' + key);
+        toast('Saved. GET /room/' + roomName + '/messages/' + key);
     }
 
     document.getElementById('createStatic').addEventListener('click', createStatic);
@@ -326,7 +326,7 @@
             const files = Array.prototype.slice.call(e.dataTransfer.files).filter(function (f) {
                 return !accept || f.type.indexOf('image/') === 0;
             });
-            if (!files.length) { toast('请拖入图片文件'); return; }
+            if (!files.length) { toast('Please drop image files'); return; }
             files.forEach(function (f) { uploadFile(f, accept ? 'image' : 'file'); });
         });
         inputEl.addEventListener('change', function (e) {
@@ -347,12 +347,12 @@
     });
 
     async function uploadFile(file, type) {
-        if (file.size > MAX_FILE_BYTES) { toast('文件不能超过 25MB'); return; }
+        if (file.size > MAX_FILE_BYTES) { toast('File must be 25MB or smaller'); return; }
         let b64;
         try {
             b64 = await readAsBase64(file);
         } catch (e) {
-            toast('读取文件失败');
+            toast('Failed to read file');
             return;
         }
         sendOp({ op: 'add', type: type, content: b64, name: file.name, mime: file.type || 'application/octet-stream' });

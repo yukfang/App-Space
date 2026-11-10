@@ -6,7 +6,7 @@ const ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 const NAMESPACE_ID = "b9e37e326b5c4e3eaebc16fe4df1aa85";
 
 async function run() {
-  // 1. 列 key
+  // 1. list keys
   const keys = await cf.kv.namespaces.keys.list({
     account_id: process.env.CF_ACCOUNT_ID,
     namespace_id: NAMESPACE_ID,
@@ -14,7 +14,7 @@ async function run() {
 
   console.log("Keys:", keys.result);
 
-//   // 2. 循环读 value
+//   // 2. read each value
 //   for (const k of keys.result) {
 //     const v = await cf.kv.namespaces.values.get({
 //       account_id: ACCOUNT_ID,
