@@ -7,14 +7,20 @@
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #1d2129; height: 100vh; display: flex; flex-direction: column; }
-    header { background: #fff; padding: 12px 16px; border-bottom: 1px solid #e3e6ea; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+    header { background: #fff; padding: 12px 16px; border-bottom: 1px solid #e3e6ea; display: flex; flex-direction: column; gap: 10px; }
+    .row1 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
     header h1 { font-size: 15px; font-weight: 700; }
-    .url { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: #f7f8fa; border: 1px solid #e3e6ea; border-radius: 6px; padding: 4px 8px; cursor: pointer; word-break: break-all; }
+    .scope { font-size: 13px; color: #4e5969; }
+    .scope code, .url { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: #f7f8fa; border: 1px solid #e3e6ea; border-radius: 6px; padding: 2px 8px; }
+    .url { cursor: pointer; word-break: break-all; }
     .url:hover { border-color: #4080ff; }
-    .meta { font-size: 12px; color: #86909c; }
     .status { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #f2f3f5; color: #86909c; }
     .status.on { background: #e8ffea; color: #00b42a; }
     .status.off { background: #fff7e8; color: #ff7d00; }
+    .row2 { display: flex; align-items: center; gap: 12px; }
+    #search { flex: 1; max-width: 560px; border: 1px solid #e3e6ea; border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; font-family: inherit; }
+    #search:focus { border-color: #4080ff; }
+    .meta { font-size: 12px; color: #86909c; }
     #list { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
     .empty { text-align: center; color: #86909c; font-size: 13px; margin-top: 40px; line-height: 1.8; }
     .empty code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff; border: 1px solid #e3e6ea; border-radius: 4px; padding: 2px 6px; }
@@ -27,9 +33,11 @@
     .method { font-weight: 700; width: 52px; }
     .method.GET { color: #00b42a; } .method.POST { color: #4080ff; } .method.PUT { color: #ff7d00; } .method.DELETE { color: #f53f3f; } .method.PATCH { color: #722ed1; }
     .code { color: #00b42a; }
+    .code.err { color: #f53f3f; }
     .path { color: #1d2129; font-weight: 600; }
     .rest { flex: 1 !important; flex-shrink: 1 !important; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #4e5969; }
     .rest b { color: #86909c; font-weight: 400; }
+    mark { background: #fff3b0; color: inherit; border-radius: 2px; }
     .detail { display: none; border-top: 1px solid #e3e6ea; padding: 10px; }
     .rec.open .detail { display: block; }
     .detail h3 { font-size: 11px; color: #86909c; font-weight: 600; margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 1px; }
@@ -40,10 +48,15 @@
 </head>
 <body>
 <header>
-    <h1>Webhook Monitor</h1>
-    <span class="url" id="url" title="Click to copy"></span>
-    <span class="meta" id="meta"></span>
-    <span class="status" id="status">Connecting...</span>
+    <div class="row1">
+        <h1>Webhook Monitor</h1>
+        <span class="scope" id="scope"></span>
+        <span class="status" id="status">Connecting...</span>
+    </div>
+    <div class="row2">
+        <input id="search" type="search" placeholder="Search headers, path, query, body, response..." autocomplete="off" spellcheck="false">
+        <span class="meta" id="meta"></span>
+    </div>
 </header>
 <div id="list"></div>
 <div id="toast"></div>
@@ -51,26 +64,57 @@
 (function () {
     const params = new URLSearchParams(location.search);
     const limit = Math.max(1, Math.min(100, parseInt(params.get('logstream'), 10) || 5));
-    const webhookUrl = location.origin + location.pathname;
+    const prefix = location.pathname.replace(/\/+$/, '') || '/';
+    const webhookUrl = location.origin + prefix;
     const listEl = document.getElementById('list');
     const statusEl = document.getElementById('status');
-    const urlEl = document.getElementById('url');
+    const metaEl = document.getElementById('meta');
+    const searchEl = document.getElementById('search');
     const toastEl = document.getElementById('toast');
 
-    urlEl.textContent = webhookUrl;
-    document.getElementById('meta').textContent = 'Showing latest ' + limit + ', click a record to expand';
-    urlEl.addEventListener('click', function () {
-        navigator.clipboard.writeText(webhookUrl).then(function () { toast('Webhook URL copied'); });
-    });
+    let query = (params.get('q') || '').trim();
+    let total = 0;
+    let es = null;
+
+    renderScope();
+    searchEl.value = query;
+
+    function renderScope() {
+        const scopeEl = document.getElementById('scope');
+        scopeEl.textContent = '';
+        if (prefix === '/webhook') {
+            scopeEl.appendChild(document.createTextNode('All webhook requests '));
+        } else {
+            scopeEl.appendChild(document.createTextNode('Requests to '));
+        }
+        const url = document.createElement('span');
+        url.className = 'url';
+        url.title = 'Click to copy';
+        url.textContent = webhookUrl + (prefix === '/webhook' ? '/*' : '');
+        url.addEventListener('click', function () {
+            navigator.clipboard.writeText(webhookUrl).then(function () { toast('Webhook URL copied'); });
+        });
+        scopeEl.appendChild(url);
+        if (prefix !== '/webhook') scopeEl.appendChild(document.createTextNode(' and its sub-paths'));
+    }
+
+    function renderMeta() {
+        const shown = listEl.querySelectorAll('.rec').length;
+        metaEl.textContent = 'Showing latest ' + shown + ' of ' + total + (query ? ' matching' : '') + ' (limit ' + limit + ')';
+    }
 
     function showEmpty() {
         listEl.innerHTML = '';
         const el = document.createElement('div');
         el.className = 'empty';
-        el.innerHTML = 'Waiting for requests...<br>Send any request to this URL and it will appear here:<br>';
-        const code = document.createElement('code');
-        code.textContent = "curl -X POST '" + webhookUrl + "' -H 'Content-Type: application/json' -d '{\"hello\":\"world\"}'";
-        el.appendChild(code);
+        if (query) {
+            el.textContent = 'No requests match "' + query + '" yet.';
+        } else {
+            el.innerHTML = 'Waiting for requests...<br>Send any request to this URL and it will appear here:<br>';
+            const code = document.createElement('code');
+            code.textContent = "curl -X POST '" + webhookUrl + (prefix === '/webhook' ? '/sample' : '') + "' -H 'Content-Type: application/json' -d '{\"hello\":\"world\"}'";
+            el.appendChild(code);
+        }
         listEl.appendChild(el);
     }
 
@@ -87,23 +131,43 @@
         if (!text) return '';
         try { return JSON.stringify(JSON.parse(text)); } catch (e) { return text.replace(/\s+/g, ' '); }
     }
+
+    // append text to parent, wrapping case-insensitive matches of the search query in <mark>
+    function appendText(parent, text) {
+        if (!query) {
+            parent.appendChild(document.createTextNode(text));
+            return;
+        }
+        const lower = text.toLowerCase();
+        const q = query.toLowerCase();
+        let from = 0;
+        let idx;
+        while ((idx = lower.indexOf(q, from)) !== -1) {
+            if (idx > from) parent.appendChild(document.createTextNode(text.slice(from, idx)));
+            const mark = document.createElement('mark');
+            mark.textContent = text.slice(idx, idx + q.length);
+            parent.appendChild(mark);
+            from = idx + q.length;
+        }
+        if (from < text.length) parent.appendChild(document.createTextNode(text.slice(from)));
+    }
     function span(cls, text) {
         const s = document.createElement('span');
         s.className = cls;
-        s.textContent = text;
+        appendText(s, text);
         return s;
     }
     function labelled(parent, label, text) {
         const b = document.createElement('b');
         b.textContent = label + '=';
         parent.appendChild(b);
-        parent.appendChild(document.createTextNode(text + '  '));
+        appendText(parent, text + '  ');
     }
     function section(parent, title, text) {
         const h = document.createElement('h3');
         h.textContent = title;
         const pre = document.createElement('pre');
-        pre.textContent = text;
+        appendText(pre, text);
         parent.appendChild(h);
         parent.appendChild(pre);
     }
@@ -112,6 +176,8 @@
         const empty = listEl.querySelector('.empty');
         if (empty) empty.remove();
 
+        const fullPath = r.path + (r.query ? '?' + r.query : '');
+        const status = r.response.status;
         const rec = document.createElement('div');
         rec.className = 'rec' + (isNew ? ' new' : '');
 
@@ -119,41 +185,66 @@
         line.className = 'line';
         line.appendChild(span('time', formatTime(r.time)));
         line.appendChild(span('method ' + r.method, r.method));
-        line.appendChild(span('code', String(r.response.status)));
-        line.appendChild(span('path', r.path + (r.query ? '?' + r.query : '')));
+        line.appendChild(span('code' + (status >= 400 ? ' err' : ''), String(status)));
+        line.appendChild(span('path', fullPath));
         const rest = document.createElement('span');
         rest.className = 'rest';
         labelled(rest, 'body', oneLine(r.body) || '(empty)');
         labelled(rest, 'headers', JSON.stringify(r.headers));
-        labelled(rest, 'response', JSON.stringify(r.response.body));
+        labelled(rest, 'response', oneLine(r.response.body) || '(empty)');
         line.appendChild(rest);
         line.addEventListener('click', function () { rec.classList.toggle('open'); });
 
         const detail = document.createElement('div');
         detail.className = 'detail';
-        section(detail, 'Request', r.method + ' ' + r.path + (r.query ? '?' + r.query : '') + '\nFrom: ' + r.ip + '\nTime: ' + new Date(r.time).toISOString());
-        section(detail, 'Headers', JSON.stringify(r.headers, null, 2));
-        section(detail, 'Body', pretty(r.body));
-        section(detail, 'Response', r.response.status + '\n' + JSON.stringify(r.response.body, null, 2));
+        section(detail, 'Request', r.method + ' ' + fullPath + '\nFrom: ' + r.ip + '\nTime: ' + new Date(r.time).toISOString() + '\nDuration: ' + r.durationMs + 'ms');
+        section(detail, 'Request headers', JSON.stringify(r.headers, null, 2));
+        section(detail, 'Request body', pretty(r.body));
+        section(detail, 'Response ' + status, pretty(r.response.body));
+        section(detail, 'Response headers', JSON.stringify(r.response.headers, null, 2));
 
         rec.appendChild(line);
         rec.appendChild(detail);
         listEl.insertBefore(rec, listEl.firstChild);
-        while (listEl.children.length > limit) listEl.removeChild(listEl.lastChild);
+        while (listEl.querySelectorAll('.rec').length > limit) listEl.removeChild(listEl.lastChild);
     }
 
     function connect() {
-        const es = new EventSource(location.pathname + '?logstream=' + limit);
+        if (es) es.close();
+        statusEl.textContent = 'Connecting...';
+        statusEl.className = 'status';
+        let url = prefix + '?logstream=' + limit;
+        if (query) url += '&q=' + encodeURIComponent(query);
+        es = new EventSource(url);
         es.onopen = function () { statusEl.textContent = 'Live'; statusEl.className = 'status on'; };
         es.onerror = function () { statusEl.textContent = 'Reconnecting...'; statusEl.className = 'status off'; };
         es.addEventListener('snapshot', function (e) {
-            const list = JSON.parse(e.data);
+            const data = JSON.parse(e.data);
+            total = data.total;
             showEmpty();
-            list.forEach(function (r) { addRecord(r, false); });
+            data.records.forEach(function (r) { addRecord(r, false); });
+            renderMeta();
         });
-        es.addEventListener('record', function (e) { addRecord(JSON.parse(e.data), true); });
-        window.addEventListener('beforeunload', function () { es.close(); });
+        es.addEventListener('record', function (e) {
+            total += 1;
+            addRecord(JSON.parse(e.data), true);
+            renderMeta();
+        });
     }
+
+    let searchTimer;
+    searchEl.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            const next = searchEl.value.trim();
+            if (next === query) return;
+            query = next;
+            const url = new URL(location.href);
+            if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
+            history.replaceState(null, '', url);
+            connect();
+        }, 300);
+    });
 
     let toastTimer;
     function toast(msg) {
@@ -163,6 +254,7 @@
         toastTimer = setTimeout(function () { toastEl.style.display = 'none'; }, 2000);
     }
 
+    window.addEventListener('beforeunload', function () { if (es) es.close(); });
     showEmpty();
     connect();
 })();

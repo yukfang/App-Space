@@ -1,20 +1,29 @@
 const fs = require('fs');
 const path = require('path');
 
-const MAX_RECORDS_PER_CHANNEL = 200;
+const MAX_RECORDS = 1000;
 const MAX_LOGSTREAM = 100;
+const MAX_QUERY_LENGTH = 200;
 const MAX_BODY_BYTES = 1024 * 1024;
 const MAX_STORED_BODY_CHARS = 64 * 1024;
 const MONITOR_PAGE = path.join(__dirname, 'monitor.html');
 
-// channel (request path) -> records, oldest first
-const records = new Map();
-// channel -> Set of SSE responses
-const subscribers = new Map();
+// { record, haystack }, oldest first; haystack is the lowercased searchable text
+const entries = [];
+// { res, prefix, query }
+const subscribers = new Set();
 let seq = 0;
 
-function channelOf(ctx) {
-    return ctx.path.replace(/\/+$/, '') || '/';
+function normalizePath(p) {
+    return p.replace(/\/+$/, '') || '/';
+}
+
+function underPrefix(recordPath, prefix) {
+    return recordPath === prefix || recordPath.startsWith(prefix + '/');
+}
+
+function matches(entry, prefix, query) {
+    return underPrefix(entry.record.path, prefix) && (!query || entry.haystack.includes(query));
 }
 
 function parseLogstream(value) {
@@ -48,26 +57,35 @@ function readRawBody(ctx) {
     });
 }
 
+function responseBodyText(body) {
+    if (body == null) return '';
+    if (typeof body === 'string') return truncate(body);
+    if (Buffer.isBuffer(body)) return `[binary, ${body.length} bytes]`;
+    if (typeof body.pipe === 'function') return '[stream]';
+    try {
+        return truncate(JSON.stringify(body));
+    } catch (e) {
+        return String(body);
+    }
+}
+
 function sendEvent(res, event, payload) {
     try {
         res.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
     } catch (e) { /* client gone */ }
 }
 
-function publish(channel, record) {
-    let list = records.get(channel);
-    if (!list) {
-        list = [];
-        records.set(channel, list);
-    }
-    list.push(record);
-    if (list.length > MAX_RECORDS_PER_CHANNEL) list.splice(0, list.length - MAX_RECORDS_PER_CHANNEL);
+function publish(record) {
+    const entry = { record, haystack: JSON.stringify(record).toLowerCase() };
+    entries.push(entry);
+    if (entries.length > MAX_RECORDS) entries.splice(0, entries.length - MAX_RECORDS);
 
-    const subs = subscribers.get(channel);
-    if (subs) for (const res of subs) sendEvent(res, 'record', record);
+    for (const sub of subscribers) {
+        if (matches(entry, sub.prefix, sub.query)) sendEvent(sub.res, 'record', record);
+    }
 }
 
-function streamRecords(ctx, channel, limit) {
+function streamRecords(ctx, prefix, query, limit) {
     ctx.respond = false;
     const res = ctx.res;
     res.writeHead(200, {
@@ -76,57 +94,78 @@ function streamRecords(ctx, channel, limit) {
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no',
     });
-    sendEvent(res, 'snapshot', (records.get(channel) || []).slice(-limit));
 
-    let subs = subscribers.get(channel);
-    if (!subs) {
-        subs = new Set();
-        subscribers.set(channel, subs);
-    }
-    subs.add(res);
+    const matched = entries.filter((e) => matches(e, prefix, query));
+    sendEvent(res, 'snapshot', {
+        total: matched.length,
+        capacity: MAX_RECORDS,
+        records: matched.slice(-limit).map((e) => e.record),
+    });
+
+    const sub = { res, prefix, query };
+    subscribers.add(sub);
 
     const heartbeat = setInterval(() => {
         try { res.write(': ping\n\n'); } catch (e) { /* client gone */ }
     }, 25000);
     const close = () => {
         clearInterval(heartbeat);
-        subs.delete(res);
-        if (subs.size === 0) subscribers.delete(channel);
+        subscribers.delete(sub);
     };
     ctx.req.on('close', close);
     res.on('error', close);
 }
 
-async function handleGenericWebhook(ctx) {
-    const channel = channelOf(ctx);
+// GET <path>?logstream=N serves the monitor page (or its event stream) instead of recording.
+async function monitor(ctx, next) {
     const limit = ctx.method === 'GET' ? parseLogstream(ctx.query.logstream) : null;
+    if (!limit) return next();
 
-    if (limit) {
-        if ((ctx.get('accept') || '').includes('text/event-stream')) {
-            streamRecords(ctx, channel, limit);
-            return;
-        }
-        ctx.type = 'text/html; charset=utf-8';
-        ctx.body = fs.createReadStream(MONITOR_PAGE);
+    const prefix = normalizePath(ctx.path);
+    if ((ctx.get('accept') || '').includes('text/event-stream')) {
+        const query = String(ctx.query.q || '').trim().toLowerCase().slice(0, MAX_QUERY_LENGTH);
+        streamRecords(ctx, prefix, query, limit);
         return;
     }
+    ctx.type = 'text/html; charset=utf-8';
+    ctx.body = fs.createReadStream(MONITOR_PAGE);
+}
 
+// Records every request handled by the webhook router, including its response.
+async function recorder(ctx, next) {
+    const id = ++seq;
+    ctx.state.webhookRecordId = id;
+    const time = Date.now();
     const body = truncate(await readRawBody(ctx));
-    const responseBody = { ok: true, id: ++seq };
-    ctx.status = 200;
-    ctx.body = responseBody;
 
-    publish(channel, {
-        id: responseBody.id,
-        time: Date.now(),
+    let error;
+    try {
+        await next();
+    } catch (e) {
+        error = e;
+    }
+
+    publish({
+        id,
+        time,
+        durationMs: Date.now() - time,
         method: ctx.method,
-        path: ctx.path,
+        path: normalizePath(ctx.path),
         query: ctx.querystring,
         ip: ctx.get('x-forwarded-for') || ctx.ip,
         headers: ctx.request.headers,
         body,
-        response: { status: ctx.status, body: responseBody },
+        response: error
+            ? { status: error.status || 500, headers: {}, body: JSON.stringify({ error: error.message }) }
+            : { status: ctx.status, headers: ctx.response.headers, body: responseBodyText(ctx.body) },
     });
+
+    if (error) throw error;
 }
 
-module.exports = { handleGenericWebhook };
+async function acknowledge(ctx) {
+    ctx.status = 200;
+    ctx.body = { ok: true, id: ctx.state.webhookRecordId };
+}
+
+module.exports = { monitor, recorder, acknowledge };
